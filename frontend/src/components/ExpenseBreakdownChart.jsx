@@ -1,42 +1,45 @@
+import { useEffect, useState } from "react";
+import API from "../services/api";
+
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
-const expenseData = [
-  {
-    name: "อาหารและเครื่องดื่ม",
-    amount: 8500,
-    percent: 35,
-  },
-  {
-    name: "เสื้อผ้า",
-    amount: 6000,
-    percent: 25,
-  },
-  {
-    name: "เดินทาง",
-    amount: 3600,
-    percent: 15,
-  },
-  {
-    name: "บันเทิง",
-    amount: 2400,
-    percent: 10,
-  },
-  {
-    name: "อื่นๆ",
-    amount: 3600,
-    percent: 15,
-  },
-];
-
-const COLORS = [
-  "var(--category-food)",
-  "var(--category-clothing)",
-  "var(--category-travel)",
-  "var(--category-entertainment)",
-  "var(--category-other)",
-];
+const CATEGORY_COLORS = {
+  อาหารและเครื่องดื่ม: "var(--category-food)",
+  เสื้อผ้า: "var(--category-clothing)",
+  เดินทาง: "var(--category-travel)",
+  บันเทิง: "var(--category-entertainment)",
+  อื่นๆ: "var(--category-other)",
+};
 
 function ExpenseBreakdownChart() {
+  const [expenseData, setExpenseData] = useState([]);
+
+  useEffect(() => {
+    fetchExpenseData();
+  }, []);
+
+  const fetchExpenseData = async () => {
+    try {
+      const response = await API.get("/expense-breakdown");
+
+      setExpenseData(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const categoryOrder = [
+    "อาหารและเครื่องดื่ม",
+    "เสื้อผ้า",
+    "เดินทาง",
+    "บันเทิง",
+    "อื่นๆ",
+  ];
+
+  const sortedExpenseData = [...expenseData].sort(
+    (a, b) => categoryOrder.indexOf(a.name) - categoryOrder.indexOf(b.name),
+  );
+
   return (
     <div className="rounded-3xl border border-border bg-card p-6">
       {/* Header */}
@@ -53,14 +56,14 @@ function ExpenseBreakdownChart() {
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={expenseData}
+                data={sortedExpenseData}
                 dataKey="percent"
                 innerRadius={70}
                 outerRadius={110}
                 paddingAngle={3}
               >
-                {expenseData.map((entry, index) => (
-                  <Cell key={index} fill={COLORS[index]} />
+                {sortedExpenseData.map((entry, index) => (
+                  <Cell key={index} fill={CATEGORY_COLORS[entry.name]} />
                 ))}
               </Pie>
 
@@ -79,28 +82,25 @@ function ExpenseBreakdownChart() {
           </ResponsiveContainer>
 
           {/* Center Text */}
-          <div
-            className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-            </div>
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"></div>
         </div>
 
         {/* Legend */}
         <div className="w-full space-y-4 xl:w-1/2">
-          {expenseData.map((item, index) => (
+          {sortedExpenseData.map((item) => (
             <div
               key={item.name}
-              className="flex items-center justify-between py-2">
-
+              className="flex items-center justify-between py-2"
+            >
               <div className="flex items-center gap-4 py-2">
                 <div
                   className="h-4 w-4 shrink-0 rounded-full"
                   style={{
-                    backgroundColor: COLORS[index],
+                    backgroundColor: CATEGORY_COLORS[item.name],
                   }}
                 />
 
-                <span
-                  className="max-w-[120px] text-base font-medium leading6 break-words">
+                <span className="max-w-[120px] text-base font-medium leading6 break-words">
                   {item.name}
                 </span>
               </div>

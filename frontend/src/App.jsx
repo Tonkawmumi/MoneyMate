@@ -48,7 +48,7 @@ function Layout() {
             >
               <Bell size={20} />
 
-              <span
+              {/* <span
                 className="
                   absolute
                   -right-1
@@ -58,7 +58,7 @@ function Layout() {
                   rounded-full
                   bg-red-500
                 "
-              />
+              /> */}
             </button>
 
             <div

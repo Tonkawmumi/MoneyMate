@@ -10,21 +10,21 @@ import {
 } from "lucide-react";
 
 const categoryIcons = {
-  อาหารและเครื่องดื่ม: Utensils,
-  เสื้อผ้า: Shirt,
-  เดินทาง: Car,
-  บันเทิง: Music4,
-  รายได้: CircleDollarSign,
-  อื่นๆ: Package,
+  "อาหารและเครื่องดื่ม": Utensils,
+  "เสื้อผ้า": Shirt,
+  "เดินทาง": Car,
+  "บันเทิง": Music4,
+  "รายได้": CircleDollarSign,
+  "อื่นๆ": Package,
 };
 
 const categoryBgColors = {
-  อาหารและเครื่องดื่ม: "var(--category-food-bg)",
-  เสื้อผ้า: "var(--category-clothing-bg)",
-  เดินทาง: "var(--category-travel-bg)",
-  บันเทิง: "var(--category-entertainment-bg)",
-  รายได้: "var(--category-income-bg)",
-  อื่นๆ: "var(--category-other-bg)",
+  "อาหารและเครื่องดื่ม": "var(--category-food-bg)",
+  "เสื้อผ้า": "var(--category-clothing-bg)",
+  "เดินทาง": "var(--category-travel-bg)",
+ "บันเทิง": "var(--category-entertainment-bg)",
+  "รายได้": "var(--category-income-bg)",
+  "อื่นๆ": "var(--category-other-bg)",
 };
 
 const budgetData = [

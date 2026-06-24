@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { forwardRef } from "react";
 import { motion } from "framer-motion";
-import { Pencil, Trash2, RotateCcw, } from "lucide-react";
+import { Pencil, Trash2, RotateCcw } from "lucide-react";
 
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -22,10 +22,41 @@ import {
 
 registerLocale("th", th);
 
+const categoryBadgeStyles = {
+  อาหารและเครื่องดื่ม: {
+    backgroundColor: "var(--category-food-bg)",
+    color: "var(--category-food)",
+  },
+  เสื้อผ้า: {
+    backgroundColor: "var(--category-clothing-bg)",
+    color: "var(--category-clothing)",
+  },
+  อิเล็กทรอนิกส์: {
+    backgroundColor: "var(--category-electronics-bg)",
+    color: "var(--category-electronics)",
+  },
+  บันเทิง: {
+    backgroundColor: "var(--category-entertainment-bg)",
+    color: "var(--category-entertainment)",
+  },
+  เดินทาง: {
+    backgroundColor: "var(--category-travel-bg)",
+    color: "var(--category-travel)",
+  },
+  รายได้: {
+    backgroundColor: "var(--category-income-bg)",
+    color: "var(--category-income)",
+  },
+  อื่นๆ: {
+    backgroundColor: "var(--category-other-bg)",
+    color: "var(--category-other)",
+  },
+};
+
 const MonthYearInput = forwardRef(({ value, onClick }, ref) => (
   <input
     ref={ref}
-    value={value}
+    value={value || "ทุกเดือน"}
     onClick={onClick}
     readOnly
     className="
@@ -54,11 +85,13 @@ const MonthYearInput = forwardRef(({ value, onClick }, ref) => (
 function Transactions() {
   const [transactions, setTransactions] = useState([]);
 
-  const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [selectedMonth, setSelectedMonth] = useState(null);
 
-  const thaiMonthYear = `${format(selectedMonth, "MMMM", {
-    locale: th,
-  })} ${selectedMonth.getFullYear() + 543}`;
+  const thaiMonthYear = selectedMonth
+    ? `${format(selectedMonth, "MMMM", {
+        locale: th,
+      })} ${selectedMonth.getFullYear() + 543}`
+    : "ทุกเดือน";
 
   const [transactionType, setTransactionType] = useState("all");
 
@@ -82,13 +115,17 @@ function Transactions() {
     setSearchItem("");
     setSelectedCategory("all");
     setTransactionType("all");
-    setSelectedMonth(new Date());
+    setSelectedMonth(null);
     setCurrentPage(1);
   };
 
   useEffect(() => {
     fetchTransactions();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchItem, selectedCategory, transactionType, selectedMonth]);
 
   const fetchTransactions = async () => {
     try {
@@ -146,9 +183,11 @@ function Transactions() {
       transactionType === "all" || item.type === transactionType;
 
     const monthMatch =
-      new Date(item.transaction_date).getMonth() === selectedMonth.getMonth() &&
-      new Date(item.transaction_date).getFullYear() ===
-        selectedMonth.getFullYear();
+      !selectedMonth ||
+      (new Date(item.transaction_date).getMonth() ===
+        selectedMonth.getMonth() &&
+        new Date(item.transaction_date).getFullYear() ===
+          selectedMonth.getFullYear());
 
     return searchMatch && categoryMatch && typeMatch && monthMatch;
   });
@@ -289,7 +328,12 @@ function Transactions() {
               locale="th"
               showMonthYearPicker
               dateFormat="MMMM yyyy"
-              customInput={<MonthYearInput />}
+              placeholderText="ทุกเดือน"
+              customInput={
+                <MonthYearInput
+                  value={selectedMonth ? thaiMonthYear : "ทุกเดือน"}
+                />
+              }
             />
 
             <CalendarDays
@@ -424,14 +468,14 @@ function Transactions() {
             </thead>
 
             <tbody className="divide-y divide-border">
-              {transactions.length > 0 ? (
+              {filteredTransactions.length > 0 ? (
                 currentTransactions.map((item) => (
                   <tr
                     key={item.id}
                     className="group transition-colors hover:bg-muted/20"
                   >
                     {/* Date */}
-                    <td className="px-6 py-4 text-muted-foreground">
+                    <td className="px-6 py-4 text-slate-600">
                       {formatThaiDate(item.transaction_date)}
                     </td>
 
@@ -442,7 +486,17 @@ function Transactions() {
 
                     {/* Category */}
                     <td className="px-6 py-4">
-                      <span className="rounded-full px-3 py-1 text-sm">
+                      <span
+                        className="
+                          inline-flex
+                          items-center
+                          rounded-full
+                          px-3 py-1
+                          text-sm
+                          font-medium
+                        "
+                        style={categoryBadgeStyles[item.category]}
+                      >
                         {item.category}
                       </span>
                     </td>

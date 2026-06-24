@@ -1,3 +1,6 @@
+import { useEffect, useState } from "react";
+import API from "../services/api";
+
 import {
   ResponsiveContainer,
   BarChart,
@@ -10,22 +13,23 @@ import {
   Label,
 } from "recharts";
 
-const monthlyData = [
-  { month: "ม.ค.", income: 35000, expense: 0 },
-  { month: "ก.พ.", income: 42000, expense: 18000 },
-  { month: "มี.ค.", income: 0, expense: 17000 },
-  { month: "เม.ย.", income: 45000, expense: 22000 },
-  { month: "พ.ค.", income: 47000, expense: 20000 },
-  { month: "มิ.ย.", income: 50000, expense: 24000 },
-  { month: "ก.ค.", income: 0, expense: 0 },
-  { month: "ส.ค.", income: 48000, expense: 0 },
-  { month: "ก.ย.", income: 55000, expense: 25000 },
-  { month: "ต.ค.", income: 0, expense: 28000 },
-  { month: "พ.ย.", income: 53000, expense: 0 },
-  { month: "ธ.ค.", income: 0, expense: 30000 },
-];
-
 function MonthlyAnalysisChart() {
+  const [monthlyData, setMonthlyData] = useState([]);
+
+  useEffect(() => {
+    fetchMonthlyData();
+  }, []);
+
+  const fetchMonthlyData = async () => {
+    try {
+      const response = await API.get("/monthly-analysis");
+
+      setMonthlyData(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <div className="rounded-3xl border border-border bg-card p-6">
       <div className="mb-6">
@@ -83,6 +87,7 @@ function MonthlyAnalysisChart() {
               <YAxis />
 
               <Tooltip
+                itemSorter={(item) => (item.dataKey === "income" ? -1 : 1)}
                 contentStyle={{
                   backgroundColor: "var(--card)",
                   border: "1px solid var(--border)",
@@ -96,10 +101,8 @@ function MonthlyAnalysisChart() {
                   fontWeight: 700,
                 }}
                 formatter={(value, name) => [
-                  <span style={{ fontWeight: 700 }}>
-                    ฿{value.toLocaleString()}
-                  </span>,
-                  <span style={{ fontWeight: 700 }}>{name}</span>,
+                  `฿${Number(value).toLocaleString()}`,
+                  `${name}:`,
                 ]}
               />
 
@@ -107,12 +110,12 @@ function MonthlyAnalysisChart() {
                 content={() => (
                   <div className="mt-8 flex justify-center gap-10">
                     <div className="flex items-center gap-3">
-                      <div className="h-4 w-4 rounded-full bg-primary" />
+                      <div className="h-4 w-4 rounded-full bg-chart-1" />
                       <span className="font-medium text-black">รายรับ</span>
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <div className="h-4 w-4 rounded-full bg-secondary" />
+                      <div className="h-4 w-4 rounded-full bg-chart-2" />
                       <span className="font-medium text-black">รายจ่าย</span>
                     </div>
                   </div>

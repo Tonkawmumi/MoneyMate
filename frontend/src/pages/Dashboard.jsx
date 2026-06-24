@@ -1,21 +1,36 @@
+import { useEffect, useState } from "react";
+import API from "../services/api";
+
 import SummaryCard from "../components/SummaryCard";
 import MonthlyAnalysisChart from "../components/MonthlyAnalysisChart";
 import RecentTransactions from "../components/RecentTransactions";
 import ExpenseBreakdownChart from "../components/ExpenseBreakdownChart";
 import BudgetOverview from "../components/BudgetOverview";
 
-import { 
-  TrendingUp, 
-  Receipt, 
-  Wallet, 
-  PiggyBank 
-} from "lucide-react";
+import { TrendingUp, Receipt, Wallet, PiggyBank } from "lucide-react";
 
 function Dashboard() {
-  const totalIncome = 45000;
-  const totalExpenses = 18000;
-  const balance = 27000;
-  const savingsRate = 60;
+  const [dashboardData, setDashboardData] = useState({
+    totalIncome: 0,
+    totalExpense: 0,
+    balance: 0,
+    savingsRate: 0,
+    savingDifference: 0,
+  });
+
+  useEffect(() => {
+    fetchDashboard();
+  }, []);
+
+  const fetchDashboard = async () => {
+    try {
+      const response = await API.get("/dashboard");
+
+      setDashboardData(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <div className="p-6">
@@ -26,8 +41,23 @@ function Dashboard() {
         </h1>
 
         <p className="mt-2 text-lg text-muted-foreground">
-          สุขภาพทางการเงินของคุณดีมาก คุณออมเงินได้มากกว่าเดือนที่แล้ว{" "}
-          <span className="font-semibold text-black">฿420</span>
+          {dashboardData.savingDifference > 0 ? (
+            <>
+              สุขภาพทางการเงินของคุณดีมาก คุณออมเงินได้มากกว่าเดือนที่แล้ว{" "}
+              <span className="font-semibold text-black">
+                ฿{dashboardData.savingDifference.toLocaleString()}
+              </span>
+            </>
+          ) : dashboardData.savingDifference < 0 ? (
+            <>
+              คุณออมเงินได้น้อยกว่าเดือนที่แล้ว{" "}
+              <span className="font-semibold text-black">
+                ฿{Math.abs(dashboardData.savingDifference).toLocaleString()}
+              </span>
+            </>
+          ) : (
+            <>สถานะการออมของคุณคงที่เมื่อเทียบกับเดือนที่แล้ว</>
+          )}
         </p>
       </div>
 
@@ -35,7 +65,7 @@ function Dashboard() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
         <SummaryCard
           title="รายรับรวม"
-          value={`฿${totalIncome.toLocaleString()}`}
+          value={`฿${dashboardData.totalIncome.toLocaleString()}`}
           icon={TrendingUp}
           iconBg="var(--card-income-bg)"
           iconColor="var(--card-income-color)"
@@ -43,7 +73,7 @@ function Dashboard() {
 
         <SummaryCard
           title="ค่าใช้จ่ายทั้งหมด"
-          value={`฿${totalExpenses.toLocaleString()}`}
+          value={`฿${dashboardData.totalExpense.toLocaleString()}`}
           icon={Receipt}
           iconBg="var(--card-expense-bg)"
           iconColor="var(--card-expense-color)"
@@ -51,7 +81,7 @@ function Dashboard() {
 
         <SummaryCard
           title="ยอดเงินปัจจุบัน"
-          value={`฿${balance.toLocaleString()}`}
+          value={`฿${dashboardData.balance.toLocaleString()}`}
           icon={Wallet}
           iconBg="var(--card-balance-bg)"
           iconColor="var(--card-balance-color)"
@@ -59,7 +89,7 @@ function Dashboard() {
 
         <SummaryCard
           title="อัตราการออม"
-          value={`${savingsRate}%`}
+          value={`${dashboardData.savingsRate}%`}
           icon={PiggyBank}
           iconBg="var(--card-saving-bg)"
           iconColor="var(--card-saving-color)"

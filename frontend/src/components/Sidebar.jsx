@@ -38,9 +38,24 @@ function Sidebar() {
     <aside className="fixed left-0 top-0 flex min-h-screen w-72 flex-col border-r border-border bg-card">
       {/* Logo */}
       <div className="border-b border-border p-6">
-        <h1 className="text-3xl font-bold text-primary">MoneyMate</h1>
+        <div className="flex items-center gap-3">
+          <div
+            className="
+              flex h-12 w-12
+              items-center justify-center
+              rounded-2xl
+              bg-primary/10
+            "
+          >
+            <Wallet size={24} className="text-primary" />
+          </div>
 
-        <p className="text-sm text-muted-foreground">Personal Finance</p>
+          <div>
+            <h1 className="text-3xl font-bold text-primary">MoneyMate</h1>
+
+            <p className="text-sm text-muted-foreground">Personal Finance</p>
+          </div>
+        </div>
       </div>
 
       {/* Menu */}

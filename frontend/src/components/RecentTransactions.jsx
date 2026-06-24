@@ -1,3 +1,6 @@
+import { useEffect, useState } from "react";
+import API from "../services/api";
+
 import { Link } from "react-router-dom";
 import {
   Utensils,
@@ -40,38 +43,31 @@ const categoryBadgeStyles = {
   },
 };
 
-const transactions = [
-  {
-    date: "24 มิ.ย. 2569",
-    title: "กาแฟ",
-    category: "อาหารและเครื่องดื่ม",
-    type: "expense",
-    amount: 180,
-  },
-  {
-    date: "23 มิ.ย. 2569",
-    title: "คอมพิวเตอร์",
-    category: "อิเล็กทรอนิกส์",
-    type: "expense",
-    amount: 39900,
-  },
-  {
-    date: "22 มิ.ย. 2569",
-    title: "เสื้อกันหนาว",
-    category: "เสื้อผ้า",
-    type: "expense",
-    amount: 599,
-  },
-  {
-    date: "21 มิ.ย. 2569",
-    title: "เงินเดือน",
-    category: "รายได้",
-    type: "income",
-    amount: 25000,
-  },
-];
-
 function RecentTransactions() {
+  const [transactions, setTransactions] = useState([]);
+
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
+
+  const fetchTransactions = async () => {
+    try {
+      const response = await API.get("/recent-transactions");
+
+      setTransactions(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const formatThaiDate = (date) => {
+  return new Date(date).toLocaleDateString("th-TH", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
+
   return (
     <div className="overflow-hidden rounded-3xl border border-border bg-card">
       {/* Header */}
@@ -118,7 +114,7 @@ function RecentTransactions() {
                     hover:bg-slate-50
                   "
                 >
-                  <td className="px-6 py-4 text-slate-600">{item.date}</td>
+                  <td className="px-6 py-4 text-slate-600">{formatThaiDate(item.transaction_date)}</td>
 
                   <td className="px-6 py-4">
                     <span className="font-medium">{item.title}</span>
