@@ -32,11 +32,17 @@ This project was developed using React for the frontend, Express.js for the back
 
 # Installation
 - Frontend
+
+```bash
 cd frontend
 npm install
 npm run dev
+```
 
 - Backend
+
+```bash
 cd backend
 npm install
 npm run dev
+```
