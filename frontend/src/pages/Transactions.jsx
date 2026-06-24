@@ -65,11 +65,15 @@ function Transactions() {
   const [openModal, setOpenModal] = useState(false);
   const [newTransactionType, setNewTransactionType] = useState("expense");
   const [category, setCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
   const [showSuccess, setShowSuccess] = useState(false);
+
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [transactionDate, setTransactionDate] = useState("");
+
+  const [searchItem, setSearchItem] = useState("");
 
   useEffect(() => {
     fetchTransactions();
@@ -82,6 +86,14 @@ function Transactions() {
     } catch (error) {
       console.error(error);
     }
+  };
+
+  const formatThaiDate = (date) => {
+    return new Date(date).toLocaleDateString("th-TH", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
   };
 
   const user = JSON.parse(localStorage.getItem("user"));
@@ -110,6 +122,25 @@ function Transactions() {
       console.error(error);
     }
   };
+
+  const filteredTransactions = transactions.filter((item) => {
+    const searchMatch = item.title
+      .toLowerCase()
+      .includes(searchItem.toLowerCase());
+
+    const categoryMatch =
+      selectedCategory === "all" || item.category === selectedCategory;
+
+    const typeMatch =
+      transactionType === "all" || item.type === transactionType;
+
+    const monthMatch =
+      new Date(item.transaction_date).getMonth() === selectedMonth.getMonth() &&
+      new Date(item.transaction_date).getFullYear() ===
+        selectedMonth.getFullYear();
+
+    return searchMatch && categoryMatch && typeMatch && monthMatch;
+  });
 
   return (
     <div className="space-y-8">
@@ -160,6 +191,8 @@ function Transactions() {
           <input
             type="text"
             placeholder="ค้นหาชื่อรายการ..."
+            value={searchItem}
+            onChange={(e) => setSearchItem(e.target.value)}
             className="
               w-full
               rounded-xl
@@ -187,6 +220,8 @@ function Transactions() {
           </label>
 
           <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
             className="
               w-full
               rounded-xl
@@ -210,14 +245,14 @@ function Transactions() {
               focus:border-primary
             "
           >
-            <option>ทุกหมวดหมู่</option>
-            <option>อาหารและเครื่องดื่ม</option>
-            <option>เสื้อผ้า</option>
-            <option>อิเล็กทรอนิกส์</option>
-            <option>บันเทิง</option>
-            <option>เดินทาง</option>
-            <option>รายได้</option>
-            <option>อื่นๆ</option>
+            <option value="all">ทุกหมวดหมู่</option>
+            <option value="อาหารและเครื่องดื่ม">อาหารและเครื่องดื่ม</option>
+            <option value="เสื้อผ้า">เสื้อผ้า</option>
+            <option value="อิเล็กทรอนิกส์">อิเล็กทรอนิกส์</option>
+            <option value="บันเทิง">บันเทิง</option>
+            <option value="เดินทาง">เดินทาง</option>
+            <option value="รายได้">รายได้</option>
+            <option value="อื่นๆ">อื่นๆ</option>
           </select>
         </div>
 
@@ -345,16 +380,14 @@ function Transactions() {
 
             <tbody className="divide-y divide-border">
               {transactions.length > 0 ? (
-                transactions.map((item) => (
+                filteredTransactions.map((item) => (
                   <tr
                     key={item.id}
                     className="group transition-colors hover:bg-muted/20"
                   >
                     {/* Date */}
                     <td className="px-6 py-4 text-muted-foreground">
-                      {new Date(item.transaction_date).toLocaleDateString(
-                        "th-TH",
-                      )}
+                      {formatThaiDate(item.transaction_date)}
                     </td>
 
                     {/* Title */}
