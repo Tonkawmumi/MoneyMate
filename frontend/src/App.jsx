@@ -81,7 +81,7 @@ function Layout() {
         {/* Pages */}
         <main className="flex-1 overflow-y-auto p-8">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/transactions" element={<Transactions />} />
             <Route path="/budget" element={<Budget />} />
             <Route path="/reports" element={<Reports />} />

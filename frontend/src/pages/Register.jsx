@@ -1,11 +1,10 @@
 import { useState } from "react";
 import API from "../services/api";
 
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Wallet, User, Mail, Lock, Eye, EyeOff, Check } from "lucide-react";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 
 function Register() {
   const [username, setUsername] = useState("");
@@ -14,6 +13,9 @@ function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const navigate = useNavigate();
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -44,8 +46,6 @@ function Register() {
     }
   };
 
-  const navigate = useNavigate();
-  const [showSuccess, setShowSuccess] = useState(false);
 
   return (
     <div

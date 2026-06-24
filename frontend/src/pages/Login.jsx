@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import API from "../services/api";
+
+import { useNavigate, Link } from "react-router-dom";
 
 import { Wallet, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
@@ -8,14 +10,31 @@ function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const navigate = useNavigate();
 
-    console.log({
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    const response = await API.post("/login", {
       email,
       password,
     });
-  };
+
+    if (response.data.success) {
+
+      navigate("/dashboard");
+    }
+  } catch (error) {
+    console.error(error);
+
+    if (error.response) {
+      alert(error.response.data.message);
+    } else {
+      alert("Server Error");
+    }
+  }
+};
 
   return (
     <div

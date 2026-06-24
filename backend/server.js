@@ -43,6 +43,49 @@ app.post("/register", async (req, res) => {
   }
 });
 
+app.post("/login", (req, res) => {
+  const { email, password } = req.body;
+
+  connection.query(
+    "SELECT * FROM users WHERE email = ?",
+    [email],
+    async (err, results) => {
+      if (err) {
+        return res.status(500).json(err);
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({
+          message: "Email not found",
+        });
+      }
+
+      const user = results[0];
+
+      const isMatch = await bcrypt.compare(
+        password,
+        user.password
+      );
+
+      if (!isMatch) {
+        return res.status(401).json({
+          message: "Wrong password",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Login Success",
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+        },
+      });
+    }
+  );
+});
+
 app.listen(5000, () => {
   console.log("Server Running");
 });

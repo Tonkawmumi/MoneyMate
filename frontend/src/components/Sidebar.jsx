@@ -14,7 +14,7 @@ function Sidebar() {
   const menus = [
     {
       name: "แดชบอร์ด",
-      path: "/",
+      path: "/dashboard",
       icon: LayoutDashboard,
     },
     {
