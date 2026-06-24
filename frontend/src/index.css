@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+:root {
+  --font-size: 16px;
+
+  --background: #f8fafc;
+  --foreground: #0f172a;
+
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
+
+  --secondary: #c7c3ff;
+  --secondary-foreground: #0f766e;
+
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+
+  --accent: #fef3c7;
+  --accent-foreground: #b45309;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  --border: rgba(0, 0, 0, 0.07);
+
+  /* Chart */
+  --chart-1: #4f46e5;
+  --chart-2: #c7c3ff;
+  --chart-3: #ef4444;
+  --chart-4: #f59e0b;
+  --chart-5: #06b6d4;
+
+  --radius: 16px;
+
+  /* Summary Card Colors */
+  --card-income-bg: #eef2ff;
+  --card-income-color: #4f46e5;
+
+  --card-expense-bg: #fef2f2;
+  --card-expense-color: #dc2626;
+
+  --card-balance-bg: #ecfeff;
+  --card-balance-color: #0891b2;
+
+  --card-saving-bg: #fff7ed;
+  --card-saving-color: #ea580c;
+
+  /* Expense Categories */
+  --category-food: #f97316; /* อาหารและเครื่องดื่ม */
+  --category-clothing: #ec4899; /* เสื้อผ้า */
+  --category-electronics: #3b82f6; /* อิเล็กทรอนิกส์ */
+  --category-entertainment: #8b5cf6; /* บันเทิง */
+  --category-travel: #14b8a6; /* เดินทาง */
+  --category-other: #94a3b8; /* อื่นๆ */
+
+  --category-income: #12b47e; /* รายได้ */
+
+  /* Category Icon Background */
+  --category-food-bg: #fff7ed;
+  --category-clothing-bg: #fdf2f8;
+  --category-electronics-bg: #eff6ff;
+  --category-entertainment-bg: #f5f3ff;
+  --category-travel-bg: #f0fdfa;
+  --category-income-bg: #ecfdf5;
+  --category-other-bg: #f8fafc;
+
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    font-size: var(--font-size);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+
+    background: var(--background);
+    color: var(--foreground);
+
+    font-family:
+      Inter,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 0;
+    color: var(--foreground);
+  }
+
+  p {
+    margin: 0;
+  }
+
+  button {
+    cursor: pointer;
+    font: inherit;
+  }
+
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+  
+}
