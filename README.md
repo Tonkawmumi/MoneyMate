@@ -1,16 +1,42 @@
-# React + Vite
+# MoneyMate
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+MoneyMate is a web-based personal finance management system developed to help users record, organize, and monitor their financial transactions. The system provides functionality for managing income and expenses, tracking financial activities, and presenting summarized financial information through an intuitive user interface.
 
-Currently, two official plugins are available:
+This project was developed using React for the frontend, Express.js for the backend, and MySQL as the database management system.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+# Technology Stack
 
-## React Compiler
+## Frontend
+- React
+- React Router DOM
+- Axios
+- Tailwind CSS
+- Framer Motion
+- Recharts
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Backend
+- Node.js
+- Express.js
+- bcrypt
+- dotenv
+- cors
 
-## Expanding the ESLint configuration
+## Database
+- MySQL
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Development Tools
+- Visual Studio Code
+- Navicat Premium
+- Postman
+- Git & GitHub
+
+# Installation
+- Frontend
+cd frontend
+npm install
+npm run dev
+
+- Backend
+cd backend
+npm install
+npm run dev
