@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { forwardRef } from "react";
 import { motion } from "framer-motion";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, RotateCcw, } from "lucide-react";
 
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -75,6 +75,17 @@ function Transactions() {
 
   const [searchItem, setSearchItem] = useState("");
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const handleClearFilters = () => {
+    setSearchItem("");
+    setSelectedCategory("all");
+    setTransactionType("all");
+    setSelectedMonth(new Date());
+    setCurrentPage(1);
+  };
+
   useEffect(() => {
     fetchTransactions();
   }, []);
@@ -141,6 +152,15 @@ function Transactions() {
 
     return searchMatch && categoryMatch && typeMatch && monthMatch;
   });
+
+  const totalItems = filteredTransactions.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+  const currentTransactions = filteredTransactions.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
 
   return (
     <div className="space-y-8">
@@ -293,54 +313,79 @@ function Transactions() {
             ประเภท
           </label>
 
-          <div
-            className="
-              flex gap-1
-              rounded-xl
-              bg-muted
-              p-1
-            "
-          >
-            <button
-              onClick={() => setTransactionType("all")}
-              className={`
-                flex-1 rounded-lg px-2 py-2 text-sm transition-all
-                ${
-                  transactionType === "all"
-                    ? "bg-card text-primary font-medium shadow-sm"
-                    : "text-muted-foreground hover:text-primary"
-                }
-              `}
+          <div className="flex gap-2">
+            <div
+              className="
+                flex flex-1 gap-1
+                rounded-xl
+                bg-muted
+                p-1
+              "
             >
-              ทั้งหมด
-            </button>
+              <button
+                onClick={() => setTransactionType("all")}
+                className={`
+                  flex-1 rounded-lg px-2 py-2 text-sm transition-all
+                  ${
+                    transactionType === "all"
+                      ? "bg-card text-primary font-medium shadow-sm"
+                      : "text-muted-foreground hover:text-primary"
+                  }
+                `}
+              >
+                ทั้งหมด
+              </button>
 
-            <button
-              onClick={() => setTransactionType("income")}
-              className={`
-                flex-1 rounded-lg px-2 py-2 text-sm transition-all
-                ${
-                  transactionType === "income"
-                    ? "bg-card text-primary font-medium shadow-sm"
-                    : "text-muted-foreground hover:text-primary"
-                }
-              `}
-            >
-              รายรับ
-            </button>
+              <button
+                onClick={() => setTransactionType("income")}
+                className={`
+                  flex-1 rounded-lg px-2 py-2 text-sm transition-all
+                  ${
+                    transactionType === "income"
+                      ? "bg-card text-primary font-medium shadow-sm"
+                      : "text-muted-foreground hover:text-primary"
+                  }
+                `}
+              >
+                รายรับ
+              </button>
 
+              <button
+                onClick={() => setTransactionType("expense")}
+                className={`
+                  flex-1 rounded-lg px-2 py-2 text-sm transition-all
+                  ${
+                    transactionType === "expense"
+                      ? "bg-card text-primary font-medium shadow-sm"
+                      : "text-muted-foreground hover:text-primary"
+                  }
+                `}
+              >
+                รายจ่าย
+              </button>
+            </div>
+
+            {/* Clear Filter */}
             <button
-              onClick={() => setTransactionType("expense")}
-              className={`
-                flex-1 rounded-lg px-2 py-2 text-sm transition-all
-                ${
-                  transactionType === "expense"
-                    ? "bg-card text-primary font-medium shadow-sm"
-                    : "text-muted-foreground hover:text-primary"
-                }
-              `}
+              type="button"
+              onClick={handleClearFilters}
+              className="
+                flex items-center gap-2
+                rounded-xl
+                border border-primary/20
+                bg-primary/5
+                px-4 py-2
+                text-sm font-medium
+                text-primary
+                transition-all duration-200
+                hover:bg-primary/10
+                hover:border-primary/30
+                hover:shadow-sm
+                active:scale-95
+              "
             >
-              รายจ่าย
+              <RotateCcw size={16} />
+              รีเซ็ตตัวกรอง
             </button>
           </div>
         </div>
@@ -380,7 +425,7 @@ function Transactions() {
 
             <tbody className="divide-y divide-border">
               {transactions.length > 0 ? (
-                filteredTransactions.map((item) => (
+                currentTransactions.map((item) => (
                   <tr
                     key={item.id}
                     className="group transition-colors hover:bg-muted/20"
@@ -480,11 +525,14 @@ function Transactions() {
           "
         >
           <span className="text-sm text-muted-foreground">
-            แสดง 1 - 10 จากทั้งหมด 42 รายการ
+            แสดง {totalItems === 0 ? 0 : startIndex + 1} - {endIndex} จากทั้งหมด{" "}
+            {totalItems} รายการ
           </span>
 
           <div className="flex items-center gap-3">
             <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
               className="
                 flex items-center gap-2
                 rounded-xl
@@ -492,9 +540,10 @@ function Transactions() {
                 bg-card
                 px-5 py-2.5
                 text-sm font-medium
-                text-muted-foreground
                 transition-all
                 hover:bg-muted
+                disabled:cursor-not-allowed
+                disabled:opacity-50
               "
             >
               <ChevronLeft size={16} />
@@ -502,6 +551,10 @@ function Transactions() {
             </button>
 
             <button
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              disabled={currentPage === totalPages || totalItems === 0}
               className="
                 flex items-center gap-2
                 rounded-xl
@@ -509,9 +562,10 @@ function Transactions() {
                 bg-card
                 px-5 py-2.5
                 text-sm font-medium
-                text-foreground
                 transition-all
                 hover:bg-muted
+                disabled:cursor-not-allowed
+                disabled:opacity-50
               "
             >
               ถัดไป
