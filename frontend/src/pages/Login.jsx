@@ -13,28 +13,29 @@ function Login() {
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  try {
-    const response = await API.post("/login", {
-      email,
-      password,
-    });
+    try {
+      const response = await API.post("/login", {
+        email,
+        password,
+      });
 
-    if (response.data.success) {
+      if (response.data.success) {
+        localStorage.setItem("user", JSON.stringify(response.data.user));
 
-      navigate("/dashboard");
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      console.error(error);
+
+      if (error.response) {
+        alert(error.response.data.message);
+      } else {
+        alert("Server Error");
+      }
     }
-  } catch (error) {
-    console.error(error);
-
-    if (error.response) {
-      alert(error.response.data.message);
-    } else {
-      alert("Server Error");
-    }
-  }
-};
+  };
 
   return (
     <div
@@ -120,11 +121,7 @@ function Login() {
                 <Wallet size={30} />
               </div>
 
-              <h1
-                className="text-3xl font-bold text-white"
-              >
-                MoneyMate
-              </h1>
+              <h1 className="text-3xl font-bold text-white">MoneyMate</h1>
             </div>
           </div>
         </div>

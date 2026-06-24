@@ -86,6 +86,63 @@ app.post("/login", (req, res) => {
   );
 });
 
+app.post("/transactions", (req, res) => {
+  const {
+    user_id,
+    type,
+    title,
+    amount,
+    category,
+    transaction_date,
+  } = req.body;
+
+  connection.query(
+    `
+    INSERT INTO transactions
+    (
+      user_id,
+      type,
+      title,
+      amount,
+      category,
+      transaction_date
+    )
+    VALUES (?, ?, ?, ?, ?, ?)
+    `,
+    [
+      user_id,
+      type,
+      title,
+      amount,
+      category,
+      transaction_date,
+    ],
+    (err, result) => {
+      if (err) {
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Transaction Added",
+      });
+    }
+  );
+});
+
+app.get("/transactions", (req, res) => {
+  connection.query(
+    "SELECT * FROM transactions ORDER BY transaction_date DESC",
+    (err, results) => {
+      if (err) {
+        return res.status(500).json(err);
+      }
+
+      res.json(results);
+    }
+  );
+});
+
 app.listen(5000, () => {
   console.log("Server Running");
 });

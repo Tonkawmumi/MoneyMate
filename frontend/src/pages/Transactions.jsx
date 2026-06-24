@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import API from "../services/api";
+
 import DatePicker, { registerLocale } from "react-datepicker";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { forwardRef } from "react";
 import { motion } from "framer-motion";
-
 import { Pencil, Trash2 } from "lucide-react";
 
 import "react-datepicker/dist/react-datepicker.css";
@@ -37,7 +38,6 @@ const MonthYearInput = forwardRef(({ value, onClick }, ref) => (
 
       outline-none
       ring-0
-
       transition-all duration-200
 
       hover:border-primary/40
@@ -52,6 +52,8 @@ const MonthYearInput = forwardRef(({ value, onClick }, ref) => (
 ));
 
 function Transactions() {
+  const [transactions, setTransactions] = useState([]);
+
   const [selectedMonth, setSelectedMonth] = useState(new Date());
 
   const thaiMonthYear = `${format(selectedMonth, "MMMM", {
@@ -65,6 +67,49 @@ function Transactions() {
   const [category, setCategory] = useState("");
 
   const [showSuccess, setShowSuccess] = useState(false);
+  const [title, setTitle] = useState("");
+  const [amount, setAmount] = useState("");
+  const [transactionDate, setTransactionDate] = useState("");
+
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
+
+  const fetchTransactions = async () => {
+    try {
+      const response = await API.get("/transactions");
+      setTransactions(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  const handleAddTransaction = async () => {
+    try {
+      await API.post("/transactions", {
+        user_id: user.id,
+        type: newTransactionType,
+        title,
+        amount,
+        category: newTransactionType === "income" ? "รายได้" : category,
+        transaction_date: transactionDate,
+      });
+
+      setShowSuccess(true);
+      setOpenModal(false);
+
+      setTitle("");
+      setAmount("");
+      setCategory("");
+      setTransactionDate("");
+
+      fetchTransactions();
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -299,135 +344,94 @@ function Transactions() {
             </thead>
 
             <tbody className="divide-y divide-border">
-              {/* Row 1 */}
-              <tr className="group transition-colors hover:bg-muted/20">
-                <td className="px-6 py-4 text-muted-foreground">
-                  24 มิ.ย. 2569
-                </td>
-
-                <td className="px-6 py-4">
-                  <span className="font-medium">Netflix Premium</span>
-                </td>
-
-                <td className="px-6 py-4">
-                  <span
-                    className="
-                      rounded-full
-                      bg-[var(--category-entertainment-bg)]
-                      px-3 py-1
-                      text-sm
-                    "
-                    style={{
-                      color: "var(--category-entertainment)",
-                    }}
+              {transactions.length > 0 ? (
+                transactions.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="group transition-colors hover:bg-muted/20"
                   >
-                    บันเทิง
-                  </span>
-                </td>
+                    {/* Date */}
+                    <td className="px-6 py-4 text-muted-foreground">
+                      {new Date(item.transaction_date).toLocaleDateString(
+                        "th-TH",
+                      )}
+                    </td>
 
-                <td className="px-6 py-4 text-center">
-                  <span className="font-medium text-red-500">รายจ่าย</span>
-                </td>
+                    {/* Title */}
+                    <td className="px-6 py-4">
+                      <span className="font-medium">{item.title}</span>
+                    </td>
 
-                <td className="px-6 py-4 text-right font-bold text-red-500">
-                  -฿299
-                </td>
+                    {/* Category */}
+                    <td className="px-6 py-4">
+                      <span className="rounded-full px-3 py-1 text-sm">
+                        {item.category}
+                      </span>
+                    </td>
 
-                <td className="px-6 py-4">
-                  <div
-                    className="
-                      flex justify-center gap-2
-                    "
+                    {/* Type */}
+                    <td className="px-6 py-4 text-center">
+                      <span
+                        className={`font-medium ${
+                          item.type === "income"
+                            ? "text-green-600"
+                            : "text-red-500"
+                        }`}
+                      >
+                        {item.type === "income" ? "รายรับ" : "รายจ่าย"}
+                      </span>
+                    </td>
+
+                    {/* Amount */}
+                    <td
+                      className={`px-6 py-4 text-right font-bold ${
+                        item.type === "income"
+                          ? "text-green-600"
+                          : "text-red-500"
+                      }`}
+                    >
+                      {item.type === "income" ? "+" : "-"}฿
+                      {Number(item.amount).toLocaleString()}
+                    </td>
+
+                    {/* Actions */}
+                    <td className="px-6 py-4">
+                      <div className="flex justify-center gap-2">
+                        <button
+                          className="
+                            rounded-lg p-2
+                            text-muted-foreground
+                            hover:bg-primary/10
+                            hover:text-primary
+                          "
+                        >
+                          <Pencil size={18} />
+                        </button>
+
+                        <button
+                          className="
+                            rounded-lg p-2
+                            text-muted-foreground
+                            hover:bg-red-100
+                            hover:text-red-500
+                          "
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="6"
+                    className="px-6 py-10 text-center text-muted-foreground"
                   >
-                    <button
-                      className="
-                        rounded-lg p-2
-                        text-muted-foreground
-                        hover:bg-primary/10
-                        hover:text-primary
-                      "
-                    >
-                      <Pencil size={18} />
-                    </button>
-
-                    <button
-                      className="
-                        rounded-lg p-2
-                        text-muted-foreground
-                        hover:bg-red-100
-                        hover:text-red-500
-                      "
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-
-              {/* Row 2 */}
-              <tr className="group transition-colors hover:bg-muted/20">
-                <td className="px-6 py-4 text-muted-foreground">
-                  23 มิ.ย. 2569
-                </td>
-
-                <td className="px-6 py-4">
-                  <span className="font-medium">เงินเดือน</span>
-                </td>
-
-                <td className="px-6 py-4">
-                  <span
-                    className="
-                      rounded-full
-                      bg-[var(--category-income-bg)]
-                      px-3 py-1
-                      text-sm
-                    "
-                    style={{
-                      color: "var(--category-income)",
-                    }}
-                  >
-                    รายได้
-                  </span>
-                </td>
-
-                <td className="px-6 py-4 text-center">
-                  <span className="font-medium text-green-600">รายรับ</span>
-                </td>
-
-                <td className="px-6 py-4 text-right font-bold text-green-600">
-                  +฿25,000
-                </td>
-
-                <td className="px-6 py-4">
-                  <div
-                    className="
-                      flex justify-center gap-2
-                    "
-                  >
-                    <button
-                      className="
-                        rounded-lg p-2
-                        text-muted-foreground
-                        hover:bg-primary/10
-                        hover:text-primary
-                      "
-                    >
-                      <Pencil size={18} />
-                    </button>
-
-                    <button
-                      className="
-                        rounded-lg p-2
-                        text-muted-foreground
-                        hover:bg-red-100
-                        hover:text-red-500
-                      "
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
+                    ยังไม่มีข้อมูลธุรกรรม
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -593,6 +597,8 @@ function Transactions() {
                 <input
                   type="text"
                   placeholder="กาแฟ, โทรศัพท์"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                   className="
                     w-full
                     rounded-xl
@@ -628,6 +634,8 @@ function Transactions() {
                     <input
                       type="number"
                       placeholder="50"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
                       className="
                         w-full
                         rounded-xl
@@ -717,6 +725,8 @@ function Transactions() {
 
                 <input
                   type="date"
+                  value={transactionDate}
+                  onChange={(e) => setTransactionDate(e.target.value)}
                   className="
                     w-full
                     cursor-pointer
@@ -758,10 +768,7 @@ function Transactions() {
 
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowSuccess(true);
-                    setOpenModal(false);
-                  }}
+                  onClick={handleAddTransaction}
                   className="
                     flex-1 rounded-2xl
                     bg-primary py-3
