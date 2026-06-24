@@ -12,19 +12,22 @@ This project was developed using React for the frontend, Express.js for the back
 - User Login
 
 ## Dashboard
-- Display total income
-- Display total expenses
+- Display total income and expenses
 - Display current balance
-- Financial overview and summary
-- Monthly financial analysis
+- Display savings rate
+- Monthly income and expense analysis
+- Expense breakdown by category
+- Budget overview
+- Recent transactions overview
 
 ## Transactions
-- Add income transactions
-- Add expense transactions
-- Edit transactions
-- Delete transactions
+- Add income and expense transactions
+- Edit and Delete transactions
 - View transaction history
-- Categorize transactions
+- Search transactions
+- Filter transactions by category
+- Filter transactions by month
+- Filter transactions by transaction type
 
 ## Budget
 - Create budget plans
