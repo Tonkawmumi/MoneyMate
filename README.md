@@ -1,4 +1,4 @@
-# MoneyMate (Under Development)
+# MoneyMate (In Progress)
 
 ## Overview
 MoneyMate is a web-based personal finance management system developed to help users record, organize, and monitor their financial transactions. The system provides functionality for managing income and expenses, tracking financial activities, and presenting summarized financial information through an intuitive user interface.

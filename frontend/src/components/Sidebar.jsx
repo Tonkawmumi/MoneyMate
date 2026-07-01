@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 import {
   LayoutDashboard,
@@ -8,9 +8,18 @@ import {
   Settings,
   CircleHelp,
   LogOut,
+  HandCoins,
 } from "lucide-react";
 
 function Sidebar() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+
+    navigate("/login");
+  };
+
   const menus = [
     {
       name: "แดชบอร์ด",
@@ -25,7 +34,7 @@ function Sidebar() {
     {
       name: "งบประมาณ",
       path: "/budget",
-      icon: Wallet,
+      icon: HandCoins,
     },
     {
       name: "รายงาน",
@@ -123,6 +132,7 @@ function Sidebar() {
             </button>
 
             <button
+              onClick={handleLogout}
               className="
                 flex w-full items-center gap-3
                 rounded-full px-4 py-3

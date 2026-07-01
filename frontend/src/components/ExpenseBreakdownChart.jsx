@@ -20,7 +20,8 @@ function ExpenseBreakdownChart() {
 
   const fetchExpenseData = async () => {
     try {
-      const response = await API.get("/expense-breakdown");
+      const user = JSON.parse(localStorage.getItem("user"));
+      const response = await API.get(`/expense-breakdown/${user.id}`);
 
       setExpenseData(response.data);
     } catch (error) {
@@ -40,18 +41,45 @@ function ExpenseBreakdownChart() {
     (a, b) => categoryOrder.indexOf(a.name) - categoryOrder.indexOf(b.name),
   );
 
+  const currentMonth = new Date().toLocaleDateString("th-TH", {
+    month: "long",
+    year: "numeric",
+  });
+
+  if (expenseData.length === 0) {
   return (
     <div className="rounded-3xl border border-border bg-card p-6">
-      {/* Header */}
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold">
+          รายละเอียดค่าใช้จ่าย
+        </h2>
+
+        <p className="mt-1 text-sm text-muted-foreground">
+          เดือน{currentMonth}
+        </p>
+      </div>
+
+      <div className="flex h-[350px] items-center justify-center">
+        <p className="text-muted-foreground">
+          ไม่มีข้อมูล
+        </p>
+      </div>
+    </div>
+  );
+}
+
+  return (
+    <div className="rounded-3xl border border-border bg-card p-6">
+
       <div className="mb-6">
         <h2 className="text-xl font-semibold">รายละเอียดค่าใช้จ่าย</h2>
 
-        <p className="mt-1 text-sm text-muted-foreground">เดือนมิถุนายน 2569</p>
+        <p className="mt-1 text-sm text-muted-foreground">เดือน{currentMonth}</p>
       </div>
 
       {/* Content */}
       <div className="flex flex-col items-center gap-8 xl:flex-row">
-        {/* Donut Chart */}
+        {/* Pie Chart */}
         <div className="relative h-[280px] w-full xl:w-1/2">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>

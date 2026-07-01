@@ -5,6 +5,21 @@ const bcrypt = require("bcrypt");
 
 const app = express();
 
+const path = require("path");
+const multer = require("multer");
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+
+const upload = multer({ storage });
+
 app.use(cors());
 app.use(express.json());
 
@@ -62,10 +77,7 @@ app.post("/login", (req, res) => {
 
       const user = results[0];
 
-      const isMatch = await bcrypt.compare(
-        password,
-        user.password
-      );
+      const isMatch = await bcrypt.compare(password, user.password);
 
       if (!isMatch) {
         return res.status(401).json({
@@ -80,43 +92,20 @@ app.post("/login", (req, res) => {
           id: user.id,
           username: user.username,
           email: user.email,
+          created_at: user.created_at,
         },
       });
-    }
+    },
   );
 });
 
-app.post("/transactions", (req, res) => {
-  const {
-    user_id,
-    type,
-    title,
-    amount,
-    category,
-    transaction_date,
-  } = req.body;
+app.put("/profile/:id", (req, res) => {
+  const { username } = req.body;
+  const { id } = req.params;
 
   connection.query(
-    `
-    INSERT INTO transactions
-    (
-      user_id,
-      type,
-      title,
-      amount,
-      category,
-      transaction_date
-    )
-    VALUES (?, ?, ?, ?, ?, ?)
-    `,
-    [
-      user_id,
-      type,
-      title,
-      amount,
-      category,
-      transaction_date,
-    ],
+    "UPDATE users SET username = ? WHERE id = ?",
+    [username, id],
     (err, result) => {
       if (err) {
         return res.status(500).json(err);
@@ -124,28 +113,45 @@ app.post("/transactions", (req, res) => {
 
       res.json({
         success: true,
-        message: "Transaction Added",
+        message: "Profile Updated",
       });
-    }
+    },
   );
 });
 
-app.get("/transactions", (req, res) => {
+app.use("/uploads", express.static("uploads"));
+
+app.post("/upload-profile/:id", upload.single("image"), (req, res) => {
+  const { id } = req.params;
+
+  const imagePath = "/uploads/" + req.file.filename;
+
   connection.query(
-    "SELECT * FROM transactions ORDER BY transaction_date DESC",
-    (err, results) => {
+    `
+      UPDATE users
+      SET profile_image = ?
+      WHERE id = ?
+      `,
+    [imagePath, id],
+    (err, result) => {
       if (err) {
         return res.status(500).json(err);
       }
 
-      res.json(results);
-    }
+      res.json({
+        success: true,
+        image: imagePath,
+      });
+    },
   );
 });
 
-app.get("/dashboard", (req, res) => {
+app.get("/dashboard/:userId", (req, res) => {
+  const { userId } = req.params;
+
   connection.query(
-    "SELECT * FROM transactions",
+    "SELECT * FROM transactions WHERE user_id = ?",
+    [userId],
     (err, results) => {
       if (err) {
         return res.status(500).json(err);
@@ -173,7 +179,8 @@ app.get("/dashboard", (req, res) => {
         .filter(
           (item) =>
             item.type === "income" &&
-            new Date(item.transaction_date).getMonth() + 1 === currentMonth
+            new Date(item.transaction_date).getMonth() + 1 ===
+              currentMonth
         )
         .reduce((sum, item) => sum + Number(item.amount), 0);
 
@@ -181,7 +188,8 @@ app.get("/dashboard", (req, res) => {
         .filter(
           (item) =>
             item.type === "expense" &&
-            new Date(item.transaction_date).getMonth() + 1 === currentMonth
+            new Date(item.transaction_date).getMonth() + 1 ===
+              currentMonth
         )
         .reduce((sum, item) => sum + Number(item.amount), 0);
 
@@ -189,7 +197,8 @@ app.get("/dashboard", (req, res) => {
         .filter(
           (item) =>
             item.type === "income" &&
-            new Date(item.transaction_date).getMonth() + 1 === previousMonth
+            new Date(item.transaction_date).getMonth() + 1 ===
+              previousMonth
         )
         .reduce((sum, item) => sum + Number(item.amount), 0);
 
@@ -197,7 +206,8 @@ app.get("/dashboard", (req, res) => {
         .filter(
           (item) =>
             item.type === "expense" &&
-            new Date(item.transaction_date).getMonth() + 1 === previousMonth
+            new Date(item.transaction_date).getMonth() + 1 ===
+              previousMonth
         )
         .reduce((sum, item) => sum + Number(item.amount), 0);
 
@@ -221,47 +231,17 @@ app.get("/dashboard", (req, res) => {
   );
 });
 
-app.get("/expense-breakdown", (req, res) => {
-  connection.query(
-    `
-    SELECT
-      category,
-      SUM(amount) AS amount
-    FROM transactions
-    WHERE type = 'expense'
-    GROUP BY category
-    `,
-    (err, results) => {
-      if (err) {
-        return res.status(500).json(err);
-      }
+app.get("/transactions/:userId", (req, res) => {
+  const { userId } = req.params;
 
-      const total = results.reduce(
-        (sum, item) => sum + Number(item.amount),
-        0
-      );
-
-      const data = results.map((item) => ({
-        name: item.category,
-        amount: Number(item.amount),
-        percent: Math.round(
-          (Number(item.amount) / total) * 100
-        ),
-      }));
-
-      res.json(data);
-    }
-  );
-});
-
-app.get("/recent-transactions", (req, res) => {
   connection.query(
     `
     SELECT *
     FROM transactions
+    WHERE user_id = ?
     ORDER BY transaction_date DESC
-    LIMIT 5
     `,
+    [userId],
     (err, results) => {
       if (err) {
         return res.status(500).json(err);
@@ -272,7 +252,91 @@ app.get("/recent-transactions", (req, res) => {
   );
 });
 
-app.get("/monthly-analysis", (req, res) => {
+app.post("/transactions", (req, res) => {
+  const { user_id, type, title, amount, category, transaction_date } = req.body;
+
+  connection.query(
+    `
+    INSERT INTO transactions
+    (
+      user_id,
+      type,
+      title,
+      amount,
+      category,
+      transaction_date
+    )
+    VALUES (?, ?, ?, ?, ?, ?)
+    `,
+    [user_id, type, title, amount, category, transaction_date],
+    (err, result) => {
+      if (err) {
+        return res.status(500).json(err);
+      }
+
+      res.json({
+        success: true,
+        message: "Transaction Added",
+      });
+    },
+  );
+});
+
+
+app.get("/recent-transactions/:userId", (req, res) => {
+  const { userId } = req.params;
+  connection.query(
+    `
+    SELECT *
+    FROM transactions
+    WHERE user_id = ?
+    ORDER BY transaction_date DESC
+    LIMIT 5
+    `,
+    [userId],
+    (err, results) => {
+      if (err) {
+        return res.status(500).json(err);
+      }
+
+      const total = results.reduce((sum, item) => sum + Number(item.amount), 0);
+
+      const data = results.map((item) => ({
+        name: item.category,
+        amount: Number(item.amount),
+        percent: Math.round((Number(item.amount) / total) * 100),
+      }));
+
+      res.json(data);
+    },
+  );
+});
+
+app.get("/recent-transactions/:userId", (req, res) => {
+  const { userId } = req.params;
+
+  connection.query(
+    `
+    SELECT *
+    FROM transactions
+    WHERE user_id = ?
+    ORDER BY transaction_date DESC
+    LIMIT 5
+    `,
+    [userId],
+    (err, results) => {
+      if (err) {
+        return res.status(500).json(err);
+      }
+
+      res.json(results);
+    },
+  );
+});
+
+app.get("/monthly-analysis/:userId", (req, res) => {
+  const { userId } = req.params;
+
   connection.query(
     `
     SELECT
@@ -281,9 +345,11 @@ app.get("/monthly-analysis", (req, res) => {
       SUM(amount) AS total
     FROM transactions
     WHERE YEAR(transaction_date) = YEAR(CURDATE())
+      AND user_id = ?
     GROUP BY MONTH(transaction_date), type
     ORDER BY MONTH(transaction_date)
     `,
+    [userId],
     (err, results) => {
       if (err) {
         return res.status(500).json(err);
@@ -304,8 +370,7 @@ app.get("/monthly-analysis", (req, res) => {
         "ธ.ค.",
       ];
 
-      const currentMonth =
-        new Date().getMonth() + 1;
+      const currentMonth = new Date().getMonth() + 1;
 
       const data = [];
 
@@ -321,18 +386,16 @@ app.get("/monthly-analysis", (req, res) => {
         const index = row.month - 1;
 
         if (row.type === "income") {
-          data[index].income =
-            Number(row.total);
+          data[index].income = Number(row.total);
         }
 
         if (row.type === "expense") {
-          data[index].expense =
-            Number(row.total);
+          data[index].expense = Number(row.total);
         }
       });
 
       res.json(data);
-    }
+    },
   );
 });
 

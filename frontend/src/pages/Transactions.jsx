@@ -129,7 +129,10 @@ function Transactions() {
 
   const fetchTransactions = async () => {
     try {
-      const response = await API.get("/transactions");
+      const user = JSON.parse(localStorage.getItem("user"));
+
+      const response = await API.get(`/transactions/${user.id}`);
+
       setTransactions(response.data);
     } catch (error) {
       console.error(error);
@@ -560,7 +563,7 @@ function Transactions() {
                     colSpan="6"
                     className="px-6 py-10 text-center text-muted-foreground"
                   >
-                    ยังไม่มีข้อมูลธุรกรรม
+                    ไม่มีข้อมูลธุรกรรม
                   </td>
                 </tr>
               )}

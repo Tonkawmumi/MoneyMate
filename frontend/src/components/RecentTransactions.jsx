@@ -52,8 +52,10 @@ function RecentTransactions() {
 
   const fetchTransactions = async () => {
     try {
-      const response = await API.get("/recent-transactions");
+      const user = JSON.parse(localStorage.getItem("user"));
 
+      const response = await API.get(`/recent-transactions/${user.id}`);
+      
       setTransactions(response.data);
     } catch (error) {
       console.error(error);
@@ -61,12 +63,12 @@ function RecentTransactions() {
   };
 
   const formatThaiDate = (date) => {
-  return new Date(date).toLocaleDateString("th-TH", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-};
+    return new Date(date).toLocaleDateString("th-TH", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
 
   return (
     <div className="overflow-hidden rounded-3xl border border-border bg-card">
@@ -114,7 +116,9 @@ function RecentTransactions() {
                     hover:bg-slate-50
                   "
                 >
-                  <td className="px-6 py-4 text-slate-600">{formatThaiDate(item.transaction_date)}</td>
+                  <td className="px-6 py-4 text-slate-600">
+                    {formatThaiDate(item.transaction_date)}
+                  </td>
 
                   <td className="px-6 py-4">
                     <span className="font-medium">{item.title}</span>

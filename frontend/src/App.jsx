@@ -1,4 +1,11 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+} from "react-router-dom";
+import { useState } from "react";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -7,7 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import Transactions from "./pages/Transactions";
 import Budget from "./pages/Budget";
 import Reports from "./pages/Reports";
-
+import Profile from "./pages/Profile";
 
 import { Bell, Search } from "lucide-react";
 
@@ -15,11 +22,11 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Login */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Dashboard Layout */}
         <Route path="/*" element={<Layout />} />
       </Routes>
     </BrowserRouter>
@@ -27,6 +34,16 @@ function App() {
 }
 
 function Layout() {
+  const [showProfile, setShowProfile] = useState(false);
+
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
@@ -61,19 +78,82 @@ function Layout() {
               /> */}
             </button>
 
-            <div
-              className="
-                flex h-10 w-10
-                items-center justify-center
-                rounded-full
-                bg-gradient-to-r
-                from-indigo-600
-                to-purple-600
-                font-bold
-                text-white
-              "
-            >
-              AJ
+            <div className="relative">
+              <button
+                onClick={() => setShowProfile(!showProfile)}
+                className="
+                  flex h-10 w-10
+                  items-center justify-center
+                  rounded-full
+                  bg-gradient-to-r
+                  from-indigo-600
+                  to-purple-600
+                  font-bold
+                  text-white
+                "
+              >
+                {user.username?.slice(0, 2).toUpperCase()}
+              </button>
+
+              {showProfile && (
+                <div
+                  className="
+                    absolute right-0 top-14
+                    w-72
+                    rounded-2xl
+                    border border-border
+                    bg-card
+                    p-6
+                    shadow-xl
+                  "
+                >
+                  <div className="flex flex-col items-center">
+                    <div
+                      className="
+                        flex h-16 w-16
+                        items-center justify-center
+                        rounded-full
+                        bg-gradient-to-r
+                        from-indigo-600
+                        to-purple-600
+                        text-lg
+                        font-bold
+                        text-white
+                      "
+                    >
+                      {user.username?.slice(0, 2).toUpperCase()}
+                    </div>
+
+                    <h3 className="mt-3 font-semibold">{user.username}</h3>
+
+                    <p className="text-sm text-muted-foreground">
+                      {user.email}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setShowProfile(false);
+                      navigate("/profile");
+                    }}
+                    className="
+                      mt-5
+                      w-full
+                      rounded-xl
+                      bg-gradient-to-r
+                      from-indigo-600
+                      to-purple-600
+                      py-3
+                      font-medium
+                      text-white
+                      transition
+                      hover:opacity-90
+                    "
+                  >
+                    ดูโปรไฟล์
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>
@@ -85,6 +165,7 @@ function Layout() {
             <Route path="/transactions" element={<Transactions />} />
             <Route path="/budget" element={<Budget />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/profile" element={<Profile />} />
           </Routes>
         </main>
       </div>
