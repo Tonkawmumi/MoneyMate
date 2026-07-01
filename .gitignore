@@ -11,6 +11,9 @@ lerna-debug.log*
 node_modules
 backend/node_modules
 
+# Upload Files
+backend/uploads/
+
 # Build
 dist
 dist-ssr
