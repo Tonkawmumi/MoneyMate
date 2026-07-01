@@ -176,7 +176,7 @@ function Profile() {
           </div>
 
           <div>
-            <label className="text-base font-medium">วันที่สมาชิก</label>
+            <label className="text-base font-medium">วันที่สมัครสมาชิก</label>
 
             <input
               type="text"

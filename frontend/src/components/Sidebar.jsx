@@ -13,7 +13,7 @@ import {
 
 function Sidebar() {
   const navigate = useNavigate();
-
+  
   const handleLogout = () => {
     localStorage.removeItem("user");
 

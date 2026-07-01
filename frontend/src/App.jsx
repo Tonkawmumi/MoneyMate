@@ -84,6 +84,7 @@ function Layout() {
                 className="
                   flex h-10 w-10
                   items-center justify-center
+                  overflow-hidden
                   rounded-full
                   bg-gradient-to-r
                   from-indigo-600
@@ -92,7 +93,15 @@ function Layout() {
                   text-white
                 "
               >
-                {user.username?.slice(0, 2).toUpperCase()}
+                {user?.profile_image ? (
+                  <img
+                    src={`http://localhost:5000${user.profile_image}`}
+                    alt="Profile"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  user.username?.slice(0, 2).toUpperCase()
+                )}
               </button>
 
               {showProfile && (
@@ -112,6 +121,7 @@ function Layout() {
                       className="
                         flex h-16 w-16
                         items-center justify-center
+                        overflow-hidden
                         rounded-full
                         bg-gradient-to-r
                         from-indigo-600
@@ -121,7 +131,15 @@ function Layout() {
                         text-white
                       "
                     >
-                      {user.username?.slice(0, 2).toUpperCase()}
+                      {user?.profile_image ? (
+                        <img
+                          src={`http://localhost:5000${user.profile_image}`}
+                          alt="Profile"
+                          className="h-full w-full rounded-full object-cover"
+                        />
+                      ) : (
+                        user.username?.slice(0, 2).toUpperCase()
+                      )}
                     </div>
 
                     <h3 className="mt-3 font-semibold">{user.username}</h3>
