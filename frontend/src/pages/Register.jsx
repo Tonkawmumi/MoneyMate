@@ -159,7 +159,7 @@ function Register() {
 
                   <input
                     type="text"
-                    placeholder="Name"
+                    placeholder="ชื่อ-นามสกุล"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     className=" 

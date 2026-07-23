@@ -13,7 +13,7 @@ import {
 
 function Sidebar() {
   const navigate = useNavigate();
-  
+
   const handleLogout = () => {
     localStorage.removeItem("user");
 
@@ -105,18 +105,24 @@ function Sidebar() {
           </p>
 
           <div className="space-y-2">
-            <button
-              className="
-              flex w-full items-center gap-3
-              rounded-full px-4 py-3
-              text-slate-600
-              transition-all duration-200
-              hover:bg-slate-100
-              "
+            <NavLink
+              to="/settings"
+              className={({ isActive }) =>
+                `
+                flex w-full items-center gap-3
+                rounded-full px-4 py-3
+                transition-all duration-200
+                ${
+                  isActive
+                    ? "bg-slate-100 text-primary font-semibold"
+                    : "text-slate-600 hover:bg-slate-100"
+                }
+                `
+              }
             >
               <Settings size={20} />
               <span className="font-medium">ตั้งค่า</span>
-            </button>
+            </NavLink>
 
             <button
               className="

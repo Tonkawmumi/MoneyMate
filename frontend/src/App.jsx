@@ -15,6 +15,7 @@ import Transactions from "./pages/Transactions";
 import Budget from "./pages/Budget";
 import Reports from "./pages/Reports";
 import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 
 import { Bell, Search } from "lucide-react";
 
@@ -184,6 +185,7 @@ function Layout() {
             <Route path="/budget" element={<Budget />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<Settings />} />
           </Routes>
         </main>
       </div>

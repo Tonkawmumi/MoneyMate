@@ -23,7 +23,7 @@ function MonthlyAnalysisChart() {
   const fetchMonthlyData = async () => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
-      const response = await API.get(`/monthly-analysis/${user.id}`);
+      const response = await API.get(`/monthly-analysis?userId=${user.id}`);
 
       setMonthlyData(response.data);
     } catch (error) {

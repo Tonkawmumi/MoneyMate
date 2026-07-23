@@ -147,8 +147,8 @@ app.post("/upload-profile/:id", upload.single("image"), (req, res) => {
   );
 });
 
-app.get("/dashboard/:userId", (req, res) => {
-  const { userId } = req.params;
+app.get("/dashboard", (req, res) => {
+  const { userId } = req.query;
 
   connection.query(
     "SELECT * FROM transactions WHERE user_id = ?",
@@ -158,68 +158,56 @@ app.get("/dashboard/:userId", (req, res) => {
         return res.status(500).json(err);
       }
 
+      const currentMonth = new Date().getMonth() + 1;
+      const currentYear = new Date().getFullYear();
+      const previousMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+      const previousYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+
       const totalIncome = results
-        .filter((item) => item.type === "income")
+        .filter(
+          (item) =>
+            item.type === "income" &&
+            new Date(item.transaction_date).getMonth() + 1 === currentMonth &&
+            new Date(item.transaction_date).getFullYear() === currentYear,
+        )
         .reduce((sum, item) => sum + Number(item.amount), 0);
 
       const totalExpense = results
-        .filter((item) => item.type === "expense")
+        .filter(
+          (item) =>
+            item.type === "expense" &&
+            new Date(item.transaction_date).getMonth() + 1 === currentMonth &&
+            new Date(item.transaction_date).getFullYear() === currentYear,
+        )
         .reduce((sum, item) => sum + Number(item.amount), 0);
 
       const balance = totalIncome - totalExpense;
 
       const savingsRate =
-        totalIncome > 0
-          ? Math.round((balance / totalIncome) * 100)
-          : 0;
+        totalIncome > 0 ? Math.round((balance / totalIncome) * 100) : 0;
 
-      const currentMonth = new Date().getMonth() + 1;
-      const previousMonth = currentMonth - 1;
 
-      const currentMonthIncome = results
-        .filter(
-          (item) =>
-            item.type === "income" &&
-            new Date(item.transaction_date).getMonth() + 1 ===
-              currentMonth
-        )
-        .reduce((sum, item) => sum + Number(item.amount), 0);
+      const previousMonthIncome = results.filter(
+        (item) =>
+          item.type === "income" &&
+          new Date(item.transaction_date).getMonth() + 1 === previousMonth &&
+          new Date(item.transaction_date).getFullYear() === previousYear,
+      )
+      .reduce((sum, item) => sum + Number(item.amount), 0);
 
-      const currentMonthExpense = results
-        .filter(
-          (item) =>
-            item.type === "expense" &&
-            new Date(item.transaction_date).getMonth() + 1 ===
-              currentMonth
-        )
-        .reduce((sum, item) => sum + Number(item.amount), 0);
+      const previousMonthExpense = results.filter(
+        (item) =>
+          item.type === "expense" &&
+          new Date(item.transaction_date).getMonth() + 1 === previousMonth &&
+          new Date(item.transaction_date).getFullYear() === previousYear,
+      )
+      .reduce((sum, item) => sum + Number(item.amount), 0);
 
-      const previousMonthIncome = results
-        .filter(
-          (item) =>
-            item.type === "income" &&
-            new Date(item.transaction_date).getMonth() + 1 ===
-              previousMonth
-        )
-        .reduce((sum, item) => sum + Number(item.amount), 0);
+      const currentMonthSaving = totalIncome - totalExpense;
 
-      const previousMonthExpense = results
-        .filter(
-          (item) =>
-            item.type === "expense" &&
-            new Date(item.transaction_date).getMonth() + 1 ===
-              previousMonth
-        )
-        .reduce((sum, item) => sum + Number(item.amount), 0);
+      const previousMonthSaving = previousMonthIncome - previousMonthExpense;
 
-      const currentMonthSaving =
-        currentMonthIncome - currentMonthExpense;
-
-      const previousMonthSaving =
-        previousMonthIncome - previousMonthExpense;
-
-      const savingDifference =
-        currentMonthSaving - previousMonthSaving;
+      const savingDifference = currentMonthSaving - previousMonthSaving;
 
       res.json({
         totalIncome,
@@ -228,7 +216,7 @@ app.get("/dashboard/:userId", (req, res) => {
         savingsRate,
         savingDifference,
       });
-    }
+    },
   );
 });
 
@@ -249,7 +237,7 @@ app.get("/transactions/:userId", (req, res) => {
       }
 
       res.json(results);
-    }
+    },
   );
 });
 
@@ -283,38 +271,8 @@ app.post("/transactions", (req, res) => {
   );
 });
 
-
-app.get("/recent-transactions/:userId", (req, res) => {
-  const { userId } = req.params;
-  connection.query(
-    `
-    SELECT *
-    FROM transactions
-    WHERE user_id = ?
-    ORDER BY transaction_date DESC
-    LIMIT 5
-    `,
-    [userId],
-    (err, results) => {
-      if (err) {
-        return res.status(500).json(err);
-      }
-
-      const total = results.reduce((sum, item) => sum + Number(item.amount), 0);
-
-      const data = results.map((item) => ({
-        name: item.category,
-        amount: Number(item.amount),
-        percent: Math.round((Number(item.amount) / total) * 100),
-      }));
-
-      res.json(data);
-    },
-  );
-});
-
-app.get("/recent-transactions/:userId", (req, res) => {
-  const { userId } = req.params;
+app.get("/recent-transactions", (req, res) => {
+  const { userId } = req.query;
 
   connection.query(
     `
@@ -335,8 +293,8 @@ app.get("/recent-transactions/:userId", (req, res) => {
   );
 });
 
-app.get("/monthly-analysis/:userId", (req, res) => {
-  const { userId } = req.params;
+app.get("/monthly-analysis", (req, res) => {
+  const { userId } = req.query;
 
   connection.query(
     `
@@ -394,6 +352,42 @@ app.get("/monthly-analysis/:userId", (req, res) => {
           data[index].expense = Number(row.total);
         }
       });
+
+      res.json(data);
+    },
+  );
+});
+
+app.get("/expense-breakdown", (req, res) => {
+  const { userId, month, year } = req.query;
+
+  connection.query(
+    `
+    SELECT
+      category,
+      SUM(amount) AS amount
+    FROM transactions
+    WHERE user_id = ?
+      AND type = 'expense'
+      AND MONTH(transaction_date) = ?
+      AND YEAR(transaction_date) = ?
+    GROUP BY category
+    ORDER BY amount DESC
+    `,
+    [userId, month, year],
+    (err, results) => {
+      if (err) {
+        return res.status(500).json(err);
+      }
+
+      const total = results.reduce((sum, item) => sum + Number(item.amount), 0);
+
+      const data = results.map((item) => ({
+        name: item.category,
+        amount: Number(item.amount),
+        percent:
+          total === 0 ? 0 : Math.round((Number(item.amount) / total) * 100),
+      }));
 
       res.json(data);
     },

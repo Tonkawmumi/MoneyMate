@@ -26,7 +26,7 @@ function Dashboard() {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
 
-      const response = await API.get(`/dashboard/${user.id}`);
+      const response = await API.get(`/dashboard?userId=${user.id}`);
 
       setDashboardData(response.data);
     } catch (error) {

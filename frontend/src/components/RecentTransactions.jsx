@@ -54,7 +54,7 @@ function RecentTransactions() {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
 
-      const response = await API.get(`/recent-transactions/${user.id}`);
+      const response = await API.get(`/recent-transactions?userId=${user.id}`);
       
       setTransactions(response.data);
     } catch (error) {
