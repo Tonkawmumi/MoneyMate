@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { forwardRef } from "react";
 import { motion } from "framer-motion";
-import { Pencil, Trash2, RotateCcw } from "lucide-react";
+import { Eye, Pencil, Trash2, RotateCcw } from "lucide-react";
 
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -94,30 +94,24 @@ function Transactions() {
     : "ทุกเดือน";
 
   const [transactionType, setTransactionType] = useState("all");
+  const [searchItem, setSearchItem] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const [openModal, setOpenModal] = useState(false);
+  const [modalMode, setModalMode] = useState("add");
+  const [selectedTransactionId, setSelectedTransactionId] = useState(null);
+
   const [newTransactionType, setNewTransactionType] = useState("expense");
   const [category, setCategory] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-
-  const [showSuccess, setShowSuccess] = useState(false);
-
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [transactionDate, setTransactionDate] = useState("");
 
-  const [searchItem, setSearchItem] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  const handleClearFilters = () => {
-    setSearchItem("");
-    setSelectedCategory("all");
-    setTransactionType("all");
-    setSelectedMonth(null);
-    setCurrentPage(1);
-  };
+  const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
     fetchTransactions();
@@ -129,14 +123,19 @@ function Transactions() {
 
   const fetchTransactions = async () => {
     try {
-      const user = JSON.parse(localStorage.getItem("user"));
-
       const response = await API.get(`/transactions/${user.id}`);
-
       setTransactions(response.data);
     } catch (error) {
       console.error(error);
     }
+  };
+
+  const handleClearFilters = () => {
+    setSearchItem("");
+    setSelectedCategory("all");
+    setTransactionType("all");
+    setSelectedMonth(null);
+    setCurrentPage(1);
   };
 
   const formatThaiDate = (date) => {
@@ -147,7 +146,51 @@ function Transactions() {
     });
   };
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  const populateModalData = (item) => {
+    setSelectedTransactionId(item.id);
+    setNewTransactionType(item.type);
+    setTitle(item.title);
+    setAmount(item.amount);
+    setCategory(item.category);
+
+    const d = new Date(item.transaction_date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+
+    setTransactionDate(`${year}-${month}-${day}`);
+  };
+
+  const handleOpenAdd = () => {
+    setModalMode("add");
+    setSelectedTransactionId(null);
+    setNewTransactionType("expense");
+    setTitle("");
+    setAmount("");
+    setCategory("");
+    setTransactionDate("");
+    setOpenModal(true);
+  };
+
+  const handleOpenView = (item) => {
+    setModalMode("view");
+    populateModalData(item);
+    setOpenModal(true);
+  };
+
+  const handleOpenEdit = (item) => {
+    setModalMode("edit");
+    populateModalData(item);
+    setOpenModal(true);
+  };
+
+  const handleOpenDelete = (item) => {
+    setModalMode("delete");
+    setSelectedTransactionId(item.id);
+    setOpenModal(true);
+  };
+
+  const isReadOnly = modalMode === "view";
 
   const handleAddTransaction = async () => {
     try {
@@ -171,6 +214,47 @@ function Transactions() {
       fetchTransactions();
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const handleEditTransaction = async () => {
+    try {
+      await API.put(`/transactions/${selectedTransactionId}`, {
+        user_id: user.id,
+        type: newTransactionType,
+        title,
+        amount,
+        category: newTransactionType === "income" ? "รายได้" : category,
+        transaction_date: transactionDate,
+      });
+
+      setShowSuccess(true);
+      setOpenModal(false);
+
+      setTitle("");
+      setAmount("");
+      setCategory("");
+      setTransactionDate("");
+      setSelectedTransactionId(null);
+
+      fetchTransactions();
+    } catch (error) {
+      console.error(error);
+      alert("เกิดข้อผิดพลาดในการแก้ไขข้อมูล");
+    }
+  };
+
+  const handleDeleteTransaction = async () => {
+    try {
+      await API.delete(
+        `/transactions/${selectedTransactionId}?userId=${user.id}`,
+      );
+      setOpenModal(false);
+      setShowSuccess(true);
+      fetchTransactions();
+    } catch (error) {
+      console.error(error);
+      alert("เกิดข้อผิดพลาดในการลบข้อมูล");
     }
   };
 
@@ -217,7 +301,7 @@ function Transactions() {
         </div>
 
         <button
-          onClick={() => setOpenModal(true)}
+          onClick={handleOpenAdd}
           className="
             flex items-center justify-center gap-2
             rounded-xl
@@ -533,23 +617,40 @@ function Transactions() {
                     <td className="px-6 py-4">
                       <div className="flex justify-center gap-2">
                         <button
+                          onClick={() => handleOpenView(item)}
                           className="
-                            rounded-lg p-2
-                            text-muted-foreground
-                            hover:bg-primary/10
-                            hover:text-primary
-                          "
+                            rounded-lg 
+                            p-2 
+                            text-muted-foreground 
+                            hover:bg-blue-100 
+                            hover:text-blue-600 
+                            transition-colors"
+                        >
+                          <Eye size={18} />
+                        </button>
+
+                        <button
+                          onClick={() => handleOpenEdit(item)}
+                          className="
+                            rounded-lg 
+                            p-2 
+                            text-muted-foreground 
+                            hover:bg-primary/10 
+                            hover:text-primary 
+                            transition-colors"
                         >
                           <Pencil size={18} />
                         </button>
 
                         <button
+                          onClick={() => handleOpenDelete(item)}
                           className="
-                            rounded-lg p-2
-                            text-muted-foreground
-                            hover:bg-red-100
-                            hover:text-red-500
-                          "
+                            rounded-lg 
+                            p-2 
+                            text-muted-foreground 
+                            hover:bg-red-100 
+                            hover:text-red-500 
+                            transition-colors"
                         >
                           <Trash2 size={18} />
                         </button>
@@ -632,45 +733,35 @@ function Transactions() {
         </div>
       </div>
 
-      {/* Add Transaction Modal */}
-      {openModal && (
-        <div
-          className="
-            fixed inset-0 z-50
-            flex items-center justify-center
-            bg-black/40
-            backdrop-blur-sm
-            p-4
-          "
-        >
-          <div
-            className="
-              w-full max-w-2xl
-              overflow-hidden
-              rounded-3xl
-              bg-card
-              shadow-2xl
-            "
-          >
+      {/* Main Modal (Add / Edit / View) */}
+      {openModal && modalMode !== "delete" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-2xl overflow-hidden rounded-3xl bg-card shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border p-6">
               <div>
-                <h2 className="text-2xl font-bold">เพิ่มรายการธุรกรรม</h2>
-
+                <h2 className="text-2xl font-bold">
+                  {modalMode === "add" && "เพิ่มรายการธุรกรรม"}
+                  {modalMode === "edit" && "แก้ไขรายการธุรกรรม"}
+                  {modalMode === "view" && "รายละเอียดการทำรายการ"}
+                </h2>
                 <p className="text-sm text-muted-foreground">
-                  บันทึกรายรับหรือรายจ่ายใหม่
+                  {modalMode === "add" && "บันทึกรายรับหรือรายจ่ายใหม่"}
+                  {modalMode === "edit" &&
+                    "อัปเดตข้อมูลรายรับหรือรายจ่ายของคุณ"}
+                  {modalMode === "view" && "ดูข้อมูลรายการธุรกรรม"}
                 </p>
               </div>
-
               <button
                 onClick={() => setOpenModal(false)}
                 className="
-                  flex h-10 w-10
-                  items-center justify-center
-                  rounded-full
-                  text-muted-foreground
-                  hover:bg-muted
-                "
+                flex 
+                h-10 w-10 
+                items-center 
+                justify-center 
+                rounded-full 
+                text-muted-foreground 
+                hover:bg-muted"
               >
                 ✕
               </button>
@@ -682,52 +773,53 @@ function Transactions() {
                 <label className="mb-2 block text-sm font-bold">
                   ประเภทรายการ
                 </label>
-
                 <div className="grid grid-cols-2 gap-4">
-                  {/* รายจ่าย */}
                   <button
                     type="button"
+                    disabled={isReadOnly}
                     onClick={() => {
                       setNewTransactionType("expense");
                       setCategory("");
                     }}
                     className={`
-                      flex items-center justify-center gap-2
-                      rounded-2xl border-2 py-4
+                      flex items-center justify-center gap-2 
+                      rounded-2xl border-2 py-4 
                       font-semibold transition-all
-
                       ${
                         newTransactionType === "expense"
                           ? "border-red-400 bg-red-50 text-red-500"
-                          : "border-border bg-card text-muted-foreground hover:border-red-300"
-                      }
+                          : "border-border bg-card text-muted-foreground"
+                      } 
+                      ${
+                        !isReadOnly && newTransactionType !== "expense"
+                          ? "hover:border-red-300"
+                          : ""
+                      } 
+                      ${isReadOnly ? "opacity-80 cursor-default" : ""}
                     `}
                   >
-                    <ArrowDownRight size={20} />
-                    รายจ่าย
+                    <ArrowDownRight size={20} /> รายจ่าย
                   </button>
-
-                  {/* รายรับ */}
                   <button
                     type="button"
+                    disabled={isReadOnly}
                     onClick={() => {
                       setNewTransactionType("income");
                       setCategory("รายได้");
                     }}
                     className={`
-                      flex items-center justify-center gap-2
-                      rounded-2xl border-2 py-4
-                      font-semibold transition-all
-
+                      flex items-center justify-center gap-2 
+                      rounded-2xl border-2 py-4 
+                      font-semibold transition-all 
                       ${
                         newTransactionType === "income"
                           ? "border-green-500 bg-green-50 text-green-600"
-                          : "border-border bg-card text-muted-foreground hover:border-green-300"
+                          : "border-border bg-card text-muted-foreground"
                       }
-                    `}
+                      ${!isReadOnly && newTransactionType !== "income" ? "hover:border-green-300" : ""} 
+                      ${isReadOnly ? "opacity-80 cursor-default" : ""}`}
                   >
-                    <ArrowUpRight size={20} />
-                    รายรับ
+                    <ArrowUpRight size={20} /> รายรับ
                   </button>
                 </div>
               </div>
@@ -737,29 +829,21 @@ function Transactions() {
                 <label className="mb-2 block text-sm font-bold">
                   ชื่อรายการ
                 </label>
-
                 <input
                   type="text"
                   placeholder="กาแฟ, โทรศัพท์"
                   value={title}
+                  readOnly={isReadOnly}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="
-                    w-full
-                    rounded-xl
-                    border border-border
-                    bg-card
-                    py-3 pl-4 pr-4
-                    outline-none
-                    cursor-text
-                    transition-all duration-200
-
-                    hover:border-primary/40
-                    hover:shadow-sm
-
-                    focus:border-primary
-                    focus:ring-2
-                    focus:ring-primary/10
-                  "
+                  className={`
+                    w-full rounded-xl 
+                    border border-border 
+                    py-3 pl-4 pr-4 outline-none 
+                    transition-all duration-200 
+                    focus:border-primary focus:ring-2 focus:ring-primary/10 
+                    ${isReadOnly 
+                      ? "bg-muted/50 cursor-default text-muted-foreground" 
+                      : "bg-card cursor-text hover:border-primary/40 hover:shadow-sm"}`}
                 />
               </div>
 
@@ -769,34 +853,25 @@ function Transactions() {
                   <label className="mb-2 block text-sm font-bold">
                     จำนวนเงิน
                   </label>
-
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2">
                       ฿
                     </span>
-
                     <input
                       type="number"
                       placeholder="50"
                       value={amount}
+                      readOnly={isReadOnly}
                       onChange={(e) => setAmount(e.target.value)}
-                      className="
-                        w-full
-                        rounded-xl
-                        border border-border
-                        bg-card
-                        py-3 pl-7 pr-4
-                        outline-none
-                        cursor-text
-                        transition-all duration-200
-
-                        hover:border-primary/40
-                        hover:shadow-sm
-
-                        focus:border-primary
-                        focus:ring-2
-                        focus:ring-primary/10
-                      "
+                      className={`
+                        w-full rounded-xl 
+                        border border-border 
+                        py-3 pl-7 pr-4 outline-none 
+                        transition-all duration-200 
+                        focus:border-primary focus:ring-2 focus:ring-primary/10 
+                        ${isReadOnly 
+                          ? "bg-muted/50 cursor-default text-muted-foreground" 
+                          : "bg-card cursor-text hover:border-primary/40 hover:shadow-sm"}`}
                     />
                   </div>
                 </div>
@@ -805,49 +880,43 @@ function Transactions() {
                   <label className="mb-2 block text-sm font-bold">
                     หมวดหมู่
                   </label>
-
-                  {newTransactionType === "income" ? (
+                  {newTransactionType === "income" || isReadOnly ? (
                     <input
-                      value="เลือกหมวดหมู่"
+                      value={category || "เลือกหมวดหมู่"}
                       readOnly
                       className="
-                        w-full rounded-2xl
-                        border border-border
-                        bg-muted
-                        px-4 py-3
-                        text-muted-foreground
-                        cursor-not-allowed
-                      "
+                        w-full 
+                        rounded-xl 
+                        border border-border 
+                        bg-muted/50 
+                        px-4 py-3 
+                        text-muted-foreground 
+                        cursor-default"
                     />
                   ) : (
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
                       className="
-                        w-full
-                        rounded-xl
-                        border border-border
-                        bg-card
-                        px-4 py-3
-
-                        cursor-pointer
-                        outline-none
-                        ring-0
-
-                        transition-all duration-200
-
-                        hover:border-primary/40
-                        hover:bg-muted/20
-                        hover:shadow-sm
-
-                        focus:outline-none
-                        focus:ring-2
-                        focus:ring-primary/10
-                        focus:border-primary
-                      "
+                        w-full 
+                        rounded-xl 
+                        border border-border 
+                        bg-card 
+                        px-4 py-3 
+                        cursor-pointer 
+                        outline-none 
+                        ring-0 
+                        transition-all 
+                        duration-200 
+                        hover:border-primary/40 
+                        hover:bg-muted/20 
+                        hover:shadow-sm 
+                        focus:outline-none 
+                        focus:ring-2 
+                        focus:ring-primary/10 
+                        focus:border-primary"
                     >
                       <option value="">เลือกหมวดหมู่</option>
-
                       <option value="อาหารและเครื่องดื่ม">
                         อาหารและเครื่องดื่ม
                       </option>
@@ -866,144 +935,116 @@ function Transactions() {
                 <label className="mb-2 block text-sm font-bold">
                   วันที่ทำรายการ
                 </label>
-
                 <input
                   type="date"
                   value={transactionDate}
+                  readOnly={isReadOnly}
                   onChange={(e) => setTransactionDate(e.target.value)}
-                  className="
-                    w-full
-                    cursor-pointer
-                    rounded-xl
-                    border border-border
-                    bg-card
-                    px-4 py-3 pr-10
-
-                    outline-none
-                    ring-0
-
-                    transition-all duration-200
-
-                    hover:border-primary/40
-                    hover:bg-muted/20
-                    hover:shadow-sm
-
-                    focus:border-primary
-                    focus:ring-2
-                    focus:ring-primary/10
-                  "
+                  className={`
+                    w-full rounded-xl 
+                    border border-border 
+                    px-4 py-3 pr-10 
+                    outline-none ring-0 
+                    transition-all duration-200 
+                    focus:border-primary focus:ring-2 focus:ring-primary/10 
+                    ${isReadOnly 
+                      ? "bg-muted/50 cursor-default text-muted-foreground pointer-events-none" 
+                      : "bg-card cursor-pointer hover:border-primary/40 hover:bg-muted/20 hover:shadow-sm"}`}
                 />
               </div>
 
-              {/* Footer */}
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  onClick={() => setOpenModal(false)}
-                  className="
-                    flex-1 rounded-2xl
-                    border border-border
-                    py-3 font-medium
-                    hover:bg-muted
-                  "
-                >
-                  ยกเลิก
-                </button>
+              {/* Footer Buttons */}
+              {!isReadOnly && (
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setOpenModal(false)}
+                    className="flex-1 rounded-2xl border border-border py-3 font-medium hover:bg-muted"
+                  >
+                    ยกเลิก
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={handleAddTransaction}
-                  className="
-                    flex-1 rounded-2xl
-                    bg-primary py-3
-                    font-medium text-white
-                    transition-all
-                    hover:opacity-90
-                  "
-                >
-                  บันทึกข้อมูล
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    onClick={
+                      modalMode === "add"
+                        ? handleAddTransaction
+                        : handleEditTransaction
+                    }
+                    className="
+                      flex-1 
+                      rounded-2xl 
+                      bg-primary 
+                      py-3 
+                      font-medium 
+                      text-white 
+                      transition-all 
+                      hover:opacity-90"
+                  >
+                    {modalMode === "add" ? "บันทึกข้อมูล" : "อัปเดตข้อมูล"}
+                  </button>
+                </div>
+              )}
             </form>
           </div>
         </div>
       )}
 
+      {/* Modal สำหรับยืนยันการลบ */}
+      {openModal && modalMode === "delete" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm overflow-hidden rounded-3xl bg-card shadow-2xl p-6 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-red-500 mb-4">
+              <Trash2 size={32} />
+            </div>
+            <h2 className="text-xl font-bold mb-2">ยืนยันการลบ</h2>
+            <p className="text-muted-foreground text-sm mb-6">
+              ต้องการลบรายการนี้หรือไม่?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setOpenModal(false)}
+                className="flex-1 rounded-xl border border-border py-2.5 font-medium hover:bg-muted transition-all"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={handleDeleteTransaction}
+                className="flex-1 rounded-xl bg-red-500 py-2.5 font-medium text-white hover:bg-red-600 transition-all"
+              >
+                ลบข้อมูล
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Animation */}
       {showSuccess && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="
-            fixed inset-0 z-[60]
-            flex items-center justify-center
-            bg-black/40
-            backdrop-blur-sm
-            p-4
-          "
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
         >
           <motion.div
-            initial={{
-              scale: 0.8,
-              opacity: 0,
-              y: 30,
-            }}
-            animate={{
-              scale: 1,
-              opacity: 1,
-              y: 0,
-            }}
-            transition={{
-              type: "spring",
-              stiffness: 220,
-              damping: 15,
-            }}
-            className="
-              w-full max-w-md
-              rounded-3xl
-              bg-card
-              p-8
-              text-center
-              shadow-2xl
-            "
+            initial={{ scale: 0.8, opacity: 0, y: 30 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 220, damping: 15 }}
+            className="w-full max-w-md rounded-3xl bg-card p-8 text-center shadow-2xl"
           >
-            {/* Success Icon */}
             <motion.div
-              initial={{
-                scale: 0,
-                rotate: -180,
-              }}
-              animate={{
-                scale: 1,
-                rotate: 0,
-              }}
-              transition={{
-                delay: 0.2,
-                duration: 0.6,
-              }}
-              className="
-                mx-auto
-                flex h-24 w-24
-                items-center justify-center
-                rounded-full
-              "
-              style={{
-                backgroundColor: "var(--category-income-bg)",
-              }}
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
+              className="mx-auto flex h-24 w-24 items-center justify-center rounded-full"
+              style={{ backgroundColor: "var(--category-income-bg)" }}
             >
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{
-                  delay: 0.5,
-                  duration: 0.3,
-                }}
-                className="
-                  flex h-16 w-16
-                  items-center justify-center
-                  rounded-full
-                  border-2
-                "
+                transition={{ delay: 0.5, duration: 0.3 }}
+                className="flex h-16 w-16 items-center justify-center rounded-full border-2"
                 style={{
                   borderColor: "var(--category-income)",
                   color: "var(--category-income)",
@@ -1025,25 +1066,16 @@ function Transactions() {
 
             {/* Title */}
             <h3 className="mt-8 mb-10 text-2xl font-bold">
-              บันทึกข้อมูลสำเร็จ
+              {modalMode === "add" && "บันทึกข้อมูลสำเร็จ"}
+              {modalMode === "edit" && "อัปเดตข้อมูลสำเร็จ"}
+              {modalMode === "delete" && "ลบข้อมูลสำเร็จ"}
             </h3>
 
             {/* Button */}
             <button
               onClick={() => setShowSuccess(false)}
-              className="
-                w-full
-                rounded-2xl
-                py-3
-                font-semibold
-                text-white
-                transition-all
-                hover:opacity-90
-                active:scale-95
-              "
-              style={{
-                backgroundColor: "var(--category-income)",
-              }}
+              className="w-full rounded-2xl py-3 font-semibold text-white transition-all hover:opacity-90 active:scale-95"
+              style={{ backgroundColor: "var(--category-income)" }}
             >
               ตกลง
             </button>

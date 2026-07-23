@@ -241,6 +241,7 @@ app.get("/transactions/:userId", (req, res) => {
   );
 });
 
+// API สำหรับเพิ่มข้อมูล (Create)
 app.post("/transactions", (req, res) => {
   const { user_id, type, title, amount, category, transaction_date } = req.body;
 
@@ -268,6 +269,47 @@ app.post("/transactions", (req, res) => {
         message: "Transaction Added",
       });
     },
+  );
+});
+
+// API สำหรับแก้ไขข้อมูล (Update)
+app.put("/transactions/:id", (req, res) => {
+  const { id } = req.params;
+  const { user_id, type, title, amount, category, transaction_date } = req.body;
+
+  connection.query(
+    `
+    UPDATE transactions 
+    SET type = ?, title = ?, amount = ?, category = ?, transaction_date = ?
+    WHERE id = ? AND user_id = ?
+    `,
+    [type, title, amount, category, transaction_date, id, user_id],
+    (err, result) => {
+      if (err) {
+        return res.status(500).json(err);
+      }
+      res.json({ success: true, message: "Transaction Updated" });
+    }
+  );
+});
+
+// API สำหรับลบข้อมูล (Delete)
+app.delete("/transactions/:id", (req, res) => {
+  const { id } = req.params;
+  const { userId } = req.query;
+
+  connection.query(
+    `
+    DELETE FROM transactions 
+    WHERE id = ? AND user_id = ?
+    `,
+    [id, userId],
+    (err, result) => {
+      if (err) {
+        return res.status(500).json(err);
+      }
+      res.json({ success: true, message: "Transaction Deleted" });
+    }
   );
 });
 
