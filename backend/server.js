@@ -294,7 +294,7 @@ app.get("/recent-transactions", (req, res) => {
 });
 
 app.get("/monthly-analysis", (req, res) => {
-  const { userId } = req.query;
+  const { userId, year } = req.query;
 
   connection.query(
     `
@@ -303,37 +303,33 @@ app.get("/monthly-analysis", (req, res) => {
       type,
       SUM(amount) AS total
     FROM transactions
-    WHERE YEAR(transaction_date) = YEAR(CURDATE())
+    WHERE YEAR(transaction_date) = ?
       AND user_id = ?
     GROUP BY MONTH(transaction_date), type
     ORDER BY MONTH(transaction_date)
     `,
-    [userId],
+    [year, userId],
     (err, results) => {
       if (err) {
         return res.status(500).json(err);
       }
 
       const monthNames = [
-        "ม.ค.",
-        "ก.พ.",
-        "มี.ค.",
-        "เม.ย.",
-        "พ.ค.",
-        "มิ.ย.",
-        "ก.ค.",
-        "ส.ค.",
-        "ก.ย.",
-        "ต.ค.",
-        "พ.ย.",
-        "ธ.ค.",
+        "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
+        "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค.",
       ];
 
-      const currentMonth = new Date().getMonth() + 1;
+      const currentYear = new Date().getFullYear();
+
+      let loopEnd = 12; 
+
+      if (Number(year) === currentYear) {
+        loopEnd = new Date().getMonth() + 1;
+      }
 
       const data = [];
 
-      for (let i = 1; i <= currentMonth; i++) {
+      for (let i = 1; i <= loopEnd; i++) {
         data.push({
           month: monthNames[i - 1],
           income: 0,
@@ -344,12 +340,14 @@ app.get("/monthly-analysis", (req, res) => {
       results.forEach((row) => {
         const index = row.month - 1;
 
-        if (row.type === "income") {
-          data[index].income = Number(row.total);
-        }
+        if (index < loopEnd) {
+          if (row.type === "income") {
+            data[index].income = Number(row.total);
+          }
 
-        if (row.type === "expense") {
-          data[index].expense = Number(row.total);
+          if (row.type === "expense") {
+            data[index].expense = Number(row.total);
+          }
         }
       });
 
@@ -357,6 +355,71 @@ app.get("/monthly-analysis", (req, res) => {
     },
   );
 });
+
+// app.get("/monthly-analysis", (req, res) => {
+//   const { userId } = req.query;
+
+//   connection.query(
+//     `
+//     SELECT
+//       MONTH(transaction_date) AS month,
+//       type,
+//       SUM(amount) AS total
+//     FROM transactions
+//     WHERE YEAR(transaction_date) = YEAR(CURDATE())
+//       AND user_id = ?
+//     GROUP BY MONTH(transaction_date), type
+//     ORDER BY MONTH(transaction_date)
+//     `,
+//     [userId],
+//     (err, results) => {
+//       if (err) {
+//         return res.status(500).json(err);
+//       }
+
+//       const monthNames = [
+//         "ม.ค.",
+//         "ก.พ.",
+//         "มี.ค.",
+//         "เม.ย.",
+//         "พ.ค.",
+//         "มิ.ย.",
+//         "ก.ค.",
+//         "ส.ค.",
+//         "ก.ย.",
+//         "ต.ค.",
+//         "พ.ย.",
+//         "ธ.ค.",
+//       ];
+
+//       const currentMonth = new Date().getMonth() + 1;
+
+//       const data = [];
+
+//       for (let i = 1; i <= currentMonth; i++) {
+//         data.push({
+//           month: monthNames[i - 1],
+//           income: 0,
+//           expense: 0,
+//         });
+//       }
+
+//       results.forEach((row) => {
+//         const index = row.month - 1;
+
+//         if (row.type === "income") {
+//           data[index].income = Number(row.total);
+//         }
+
+//         if (row.type === "expense") {
+//           data[index].expense = Number(row.total);
+//         }
+//       });
+
+//       res.json(data);
+//     },
+//   );
+// });
 
 app.get("/expense-breakdown", (req, res) => {
   const { userId, month, year } = req.query;

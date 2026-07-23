@@ -16,14 +16,17 @@ import {
 function MonthlyAnalysisChart() {
   const [monthlyData, setMonthlyData] = useState([]);
 
+  const today = new Date();
+  const [selectedYear, setSelectedYear] = useState(today.getFullYear());
+
   useEffect(() => {
     fetchMonthlyData();
-  }, []);
+  }, [selectedYear]);
 
   const fetchMonthlyData = async () => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
-      const response = await API.get(`/monthly-analysis?userId=${user.id}`);
+      const response = await API.get(`/monthly-analysis?userId=${user.id}&year=${selectedYear}`);
 
       setMonthlyData(response.data);
     } catch (error) {
@@ -33,35 +36,40 @@ function MonthlyAnalysisChart() {
 
   return (
     <div className="rounded-3xl border border-border bg-card p-6">
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold">รายรับ vs รายจ่าย</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          การวิเคราะห์รายเดือนของปี 2569
-        </p>
-      </div>
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-semibold">รายรับ vs รายจ่าย</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            การวิเคราะห์รายเดือนของปี {selectedYear + 543}
+          </p>
+        </div>
 
-      {/* <select
+        {/* Dropdown */}
+        <select
+          value={selectedYear}
+          onChange={(e) => setSelectedYear(Number(e.target.value))}
           className="
-            rounded-full
+            rounded-xl
             border
-            border-[#C7C3FF]
-            bg-white
-            px-5 py-2
-            text-base
-            font-medium
-            text-slate-500
+            border-border
+            bg-card
+            px-4
+            py-2
             outline-none
-            transition-all
             hover:border-primary
-            focus:border-primary
-            focus:ring-2
-            focus:ring-primary/15
             cursor-pointer
-            "
+          "
         >
-          <option>6 เดือนที่ผ่านมา</option>
-          <option>1 ปีที่ผ่านมา</option>
-        </select> */}
+          {[0, 1, 2, 3, 4, 5].map((offset) => {
+            const year = today.getFullYear() + offset;
+            return (
+              <option key={year} value={year}>
+                {year + 543}
+              </option>
+            );
+          })}
+        </select>
+      </div>
 
       {/* Charts */}
       <div>
