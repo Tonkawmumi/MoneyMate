@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Check } from "lucide-react";
 import API from "../services/api";
+import { API_BASE_URL } from "../services/api";
 
 function Profile() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -8,7 +9,8 @@ function Profile() {
   const [username, setUsername] = useState(user.username || "");
 
   const [previewImage, setPreviewImage] = useState(
-    user.profile_image ? `http://localhost:5000${user.profile_image}` : null,
+    // user.profile_image ? `http://localhost:5000${user.profile_image}` : null,
+    user.profile_image ? `${API_BASE_URL}${user.profile_image}` : null,
   );
 
   const [selectedFile, setSelectedFile] = useState(null);

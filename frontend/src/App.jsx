@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "./services/api";
 import {
   BrowserRouter,
   Routes,
@@ -96,7 +97,8 @@ function Layout() {
               >
                 {user?.profile_image ? (
                   <img
-                    src={`http://localhost:5000${user.profile_image}`}
+                    // src={`http://localhost:5000${user.profile_image}`}
+                    src={`${API_BASE_URL}${user.profile_image}`}
                     alt="Profile"
                     className="h-full w-full object-cover"
                   />
@@ -134,7 +136,8 @@ function Layout() {
                     >
                       {user?.profile_image ? (
                         <img
-                          src={`http://localhost:5000${user.profile_image}`}
+                          // src={`http://localhost:5000${user.profile_image}`}
+                          src={`${API_BASE_URL}${user.profile_image}`}
                           alt="Profile"
                           className="h-full w-full rounded-full object-cover"
                         />

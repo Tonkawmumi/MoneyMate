@@ -2,6 +2,7 @@ import { useState } from "react";
 import { User, Shield, Bell, Trash2, Edit, Save, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import API from "../services/api";
+import { API_BASE_URL } from "../services/api";
 
 function Settings() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -9,7 +10,8 @@ function Settings() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   const [previewImage, setPreviewImage] = useState(
-    user?.profile_image ? `http://localhost:5000${user.profile_image}` : null,
+    // user?.profile_image ? `http://localhost:5000${user.profile_image}` : null,
+    user?.profile_image ? `${API_BASE_URL}${user.profile_image}` : null,
   );
   const [selectedFile, setSelectedFile] = useState(null);
 
